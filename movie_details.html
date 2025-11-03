@@ -48,8 +48,8 @@
       const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=fr-FR`);
       const m = await res.json();
 
-      // PLAYER SANS ADS, SANS GÉO-BLOCK
-      const embed = `https://vidsrc.xyz/embed/movie/${movieId}`;
+      // VF PRIORITÉ + SANS ADS
+      const embed = `https://vidsrc.xyz/embed/movie/${movieId}?lang=fr`;
 
       document.getElementById('content').innerHTML = `
         <img src="https://image.tmdb.org/t/p/w500${m.poster_path}" class="poster">
@@ -59,7 +59,7 @@
           <p class="synopsis">${m.overview || 'Aucun synopsis.'}</p>
           <div class="player">
             <div class="player-header">
-              <span>Lecture : ${m.title}</span>
+              <span>Lecture : ${m.title} (VF)</span>
               <button onclick="document.querySelector('iframe').src=''" style="background:none;color:white;border:none;font-size:1.5rem;cursor:pointer;">X</button>
             </div>
             <iframe src="${embed}" allowfullscreen allow="autoplay; fullscreen"></iframe>
