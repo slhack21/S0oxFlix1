@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>S0oxFlix</title>
-  <link rel="manifest" href="data:application/manifest+json,{\"name\":\"S0oxFlix\",\"short_name\":\"S0ox\",\"start_url\":\".\",\"display\":\"standalone\",\"background_color\":\"#4a148c\",\"theme_color\":\"#6a1b9a\",\"icons\":[{\"src\":\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E\",\"sizes\":\"192x192\",\"type\":\"image/svg+xml\"}]}">
+  <link rel="manifest" href="data:application/manifest+json,{\"name\":\"S0oxFlix\",\"short_name\":\"S0ox\",\"start_url\":\".\",\"display\":\"standalone\",\"background_color\":\"#4a148c\",\"theme_color\":\"#6a1b9a\",\"icons\":[{\"src\":\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎬%3C/text%3E%3C/svg%3E\",\"sizes\":\"192x192\",\"type\":\"image/svg+xml\"}]}">
   <style>
     :root { --bg: #0f0a1a; --card: #1a0d33; --text: #e0d0ff; --accent: #6a1b9a; }
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -30,7 +30,7 @@
 </head>
 <body>
   <header><h1>🎬 S0oxFlix</h1></header>
-  <input type="text" id="search" placeholder="🔍 Rechercher un film..." onkeyup="filter()">
+  <input type="text" id="search" placeholder="🔍 Rechercher un film..." onkeyup="filterFilms()">
   <div class="grid" id="films"></div>
 
   <!-- PAGE SOLO FILM -->
@@ -43,7 +43,7 @@
       <p id="desc"></p>
       <p><strong>Acteurs :</strong> <span id="actors"></span></p>
       <p><strong>Durée :</strong> <span id="duration"></span></p>
-      <button class="play-btn" onclick="showAd()">▶ Regarder</button>
+      <button class="play-btn" id="playBtn" onclick="showAd()">▶ Regarder</button>
       <video id="player" controls class="hidden" style="width:100%; margin-top:20px; border-radius:12px;"></video>
     </div>
   </div>
@@ -66,51 +66,58 @@
   <script>
     const films = [
       {
-        t:"Metropolis", y:1927, img:"https://archive.org/services/img/metropolis_1927",
-        url:"https://archive.org/download/metropolis_1927/metropolis_1927_1080p.m3u8",
-        desc:"Un chef-d'œuvre du cinéma muet. Dans une ville futuriste, un ouvrier se révolte contre l'élite.",
-        actors:"Alfred Abel, Brigitte Helm, Gustav Fröhlich",
-        duration:"2h29"
+        t: "Night of the Living Dead",
+        y: 1968,
+        img: "https://ia800502.us.archive.org/18/items/night_of_the_living_dead/night_of_the_living_dead_512kb.jpg",
+        url: "https://ia800502.us.archive.org/18/items/night_of_the_living_dead/night_of_the_living_dead.mp4",
+        desc: "Un groupe de personnes se réfugie dans une ferme isolée pour échapper à une horde de zombies affamés. Premier film culte des morts-vivants.",
+        actors: "Duane Jones, Judith O'Dea, Karl Hardman",
+        duration: "1h36"
       },
       {
-        t:"Nosferatu", y:1922, img:"https://archive.org/services/img/nosferatu_1922",
-        url:"https://archive.org/download/nosferatu_1922/nosferatu.m3u8",
-        desc:"Le premier film de vampire. Un comte maléfique sème la terreur en Allemagne.",
-        actors:"Max Schreck, Gustav von Wangenheim",
-        duration:"1h34"
+        t: "Metropolis",
+        y: 1927,
+        img: "https://ia601504.us.archive.org/18/items/metropolis_1927/metropolis_1927_512kb.jpg",
+        url: "https://ia601504.us.archive.org/18/items/metropolis_1927/metropolis_1927.mp4",
+        desc: "Dans une cité futuriste divisée entre ouvriers et élite, une révolte menace l'ordre social.",
+        actors: "Brigitte Helm, Alfred Abel, Gustav Fröhlich",
+        duration: "2h29"
       },
       {
-        t:"Night of the Living Dead", y:1968, img:"https://archive.org/services/img/night_of_the_living_dead",
-        url:"https://archive.org/download/night_of_the_living_dead/night.m3u8",
-        desc:"Le film qui a inventé les zombies modernes. Un groupe survit dans une maison assiégée.",
-        actors:"Duane Jones, Judith O'Dea",
-        duration:"1h36"
+        t: "Nosferatu",
+        y: 1922,
+        img: "https://ia800103.us.archive.org/15/items/nosferatu_1922/nosferatu_512kb.jpg",
+        url: "https://ia800103.us.archive.org/15/items/nosferatu_1922/nosferatu.mp4",
+        desc: "Le comte Orlok, vampire ancestral, apporte la peste dans une ville allemande.",
+        actors: "Max Schreck, Greta Schröder, Gustav von Wangenheim",
+        duration: "1h34"
       }
     ];
 
-    function render() {
+    let currentHls = null;
+
+    function renderFilms(filmList = films) {
       const grid = document.getElementById('films');
       grid.innerHTML = '';
-      films.forEach((f, i) => {
-        const card = document.createElement('div'); card.className='card';
-        card.innerHTML = `<img src="${f.img}/format=jpg&height=200" alt="${f.t}">
-          <div class="info"><h3>${f.t}</h3><p>${f.y}</p></div>`;
+      filmList.forEach((f, i) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${f.img}" alt="${f.t}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZpbG0gTm8gSW1hZ2U8L3RleHQ+PC9zdmc+'">
+          <div class="info">
+            <h3>${f.t}</h3>
+            <p>${f.y}</p>
+          </div>
+        `;
         card.onclick = () => showMovie(i);
         grid.appendChild(card);
       });
     }
 
-    function filter() {
+    function filterFilms() {
       const term = document.getElementById('search').value.toLowerCase();
       const filtered = films.filter(f => f.t.toLowerCase().includes(term));
-      const grid = document.getElementById('films'); grid.innerHTML = '';
-      filtered.forEach((f, i) => {
-        const card = document.createElement('div'); card.className='card';
-        card.innerHTML = `<img src="${f.img}/format=jpg&height=200" alt="${f.t}">
-          <div class="info"><h3>${f.t}</h3><p>${f.y}</p></div>`;
-        card.onclick = () => showMovie(films.indexOf(f));
-        grid.appendChild(card);
-      });
+      renderFilms(filtered);
     }
 
     function showMovie(i) {
@@ -118,13 +125,20 @@
       document.getElementById('moviePage').classList.remove('hidden');
       document.getElementById('films').style.display = 'none';
       document.getElementById('search').style.display = 'none';
-      document.getElementById('poster').src = `${f.img}/format=jpg&height=400`;
+      document.getElementById('header').style.display = 'none'; // Cache header si besoin
+      document.getElementById('poster').src = f.img;
       document.getElementById('title').textContent = f.t;
       document.getElementById('year').textContent = f.y;
       document.getElementById('desc').textContent = f.desc;
       document.getElementById('actors').textContent = f.actors;
       document.getElementById('duration').textContent = f.duration;
       window.currentFilm = f;
+      document.getElementById('playBtn').textContent = '▶ Regarder';
+      document.getElementById('player').classList.add('hidden');
+      if (currentHls) {
+        currentHls.destroy();
+        currentHls = null;
+      }
     }
 
     function backToHome() {
@@ -132,6 +146,8 @@
       document.getElementById('player').classList.add('hidden');
       document.getElementById('films').style.display = 'grid';
       document.getElementById('search').style.display = 'block';
+      document.getElementById('header').style.display = 'block';
+      renderFilms();
     }
 
     function showAd() {
@@ -140,6 +156,7 @@
 
     function openAd() {
       document.getElementById('adPopup').classList.add('hidden');
+      // TON ADSTERRA
       const adsterraScript = document.createElement('script');
       adsterraScript.src = '//pl27976969.effectivegatecpm.com/f1/f2/7c/f1f27c6bc9906eca8322aec126ded56b.js';
       document.head.appendChild(adsterraScript);
@@ -152,13 +169,20 @@
       document.getElementById('thanksPopup').classList.add('hidden');
       const video = document.getElementById('player');
       video.classList.remove('hidden');
-      if (Hls.isSupported() && window.currentFilm.url.includes('.m3u8')) {
-        const hls = new Hls(); hls.loadSource(window.currentFilm.url); hls.attachMedia(video);
-      } else { video.src = window.currentFilm.url; }
+      const url = window.currentFilm.url;
+      if (Hls.isSupported() && url.includes('.m3u8')) {
+        currentHls = new Hls();
+        currentHls.loadSource(url);
+        currentHls.attachMedia(video);
+      } else {
+        video.src = url;
+      }
       video.play();
+      document.getElementById('playBtn').style.display = 'none';
     }
 
-    render();
+    // Init
+    renderFilms();
   </script>
 </body>
 </html>
