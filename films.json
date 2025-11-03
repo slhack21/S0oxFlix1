@@ -5,7 +5,7 @@
     "year": "2023",
     "poster": "https://image.tmdb.org/t/p/w500/ydaJsTyrRimSQ1dTf2xvrmJKz5b.jpg",
     "overview": "Après avoir retrouvé Gwen Stacy, Spider-Man, le sympathique héros originaire de Brooklyn, est catapulté à travers le Multivers, où il rencontre une équipe de Spider-Héros chargée d'en protéger l'existence. Mais lorsque les héros s'opposent sur la façon de gérer une nouvelle menace, Miles se retrouve confronté à eux et doit redéfinir ce que signifie être un héros afin de sauver les personnes qu'il aime le plus.",
-    "embed": "https://vidsrc-embed.ru/embed/movie?tmdb=569094",
+    "embed": "<iframe src=\"https://vidsrc-embed.ru/embed/movie?tmdb=569094\" style=\"width: 100%; height: 100%;\" frameborder=\"0\" referrerpolicy=\"origin\" allowfullscreen></iframe>",
     "type": "movie"
   }
 ]
