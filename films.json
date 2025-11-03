@@ -2,13 +2,13 @@
   {
     "title": "Spider-Man: Across the Spider-Verse",
     "year": "2023",
-    "tmdb": "569094",
-    "poster": "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg"
+    "poster": "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
+    "embed": "https://vidsrc-embed.ru/embed/movie?tmdb=569094"
   },
   {
     "title": "Dune: Part Two",
     "year": "2024",
-    "tmdb": "693134",
-    "poster": "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMUBj4.jpg"
+    "poster": "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMUBj4.jpg",
+    "embed": "https://vidsrc-embed.ru/embed/movie?tmdb=693134"
   }
 ]
