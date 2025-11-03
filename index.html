@@ -22,10 +22,10 @@
     .player-container.active { display:block; }
     .player-header { background:var(--accent); color:white; padding:12px 15px; display:flex; justify-content:space-between; align-items:center; font-weight:bold; }
     .close-player { background:none; border:none; color:white; font-size:1.5rem; cursor:pointer; }
-    iframe { width:100%; height:500px; border:none; }
-    .player-loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#aaa; font-size:1rem; text-align:center; display:block; }
-    .popup { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; z-index:1000; }
-    .popup.active { display:flex; align-items:center; justify-content:center; }
+    iframe { width:100%; height:500px; border:none; display:none; }
+    .player-loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#aaa; font-size:1rem; text-align:center; display:block; z-index:1; }
+    .popup { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; z-index:1000; align-items:center; justify-content:center; }
+    .popup.active { display:flex; }
     .popup-content { background:var(--card); padding:30px; border-radius:16px; text-align:center; max-width:400px; }
     .popup-content h3 { color:var(--accent); margin-bottom:10px; }
     .popup-content p { margin-bottom:20px; color:#aaa; }
@@ -35,9 +35,7 @@
 </head>
 <body>
 
-  <header>
-    <h1>S0oxFlix</h1>
-  </header>
+  <header><h1>S0oxFlix</h1></header>
 
   <div class="search-bar">
     <input type="text" id="search" placeholder="Rechercher un film..." />
@@ -50,16 +48,15 @@
       <span id="currentTitle"></span>
       <button class="close-player" onclick="closePlayer()">X</button>
     </div>
-    <div class="player-loading" id="loadingMsg">Chargement...<br><small>2-3s</small></div>
+    <div class="player-loading" id="loadingMsg">Chargement du film...<br><small>2-3s</small></div>
     <iframe id="player" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
-  </ TCC>
   </div>
 
   <!-- Popup ADS 1 -->
   <div class="popup" id="ad1">
     <div class="popup-content">
       <h3>ATTENTION ADS!</h3>
-      <p>Merci de votre soutien et dsl</p>
+      <p>Merci de votre soutien !</p>
       <button class="popup-btn" onclick="showAd2()">Continuer</button>
     </div>
   </div>
@@ -68,42 +65,65 @@
   <div class="popup" id="ad2">
     <div class="popup-content">
       <h3>Merci de ton soutien !</h3>
-      <p>Maintenant, regarde le film</p>
-      <button class="popup-btn" onclick="playFromAd()">Regarder le film</button>
+      <p>Le film va démarrer...</p>
+      <button class="popup-btn" onclick="playFromAd()">Regarder</button>
     </div>
   </div>
 
   <script>
-    // TON SCRIPT AD (redirection)
+    let films = [];
+    let currentFilm = null;
+
+    // Chargement des films
+    fetch('films.json?t=' + Date.now())
+      .then(r => {
+        if (!r.ok) throw new Error('Fichier non trouvé');
+        return r.json();
+      })
+      .then(data => {
+        films = data;
+        render(films);
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Erreur : films.json introuvable ou mal formé</p>';
+      });
+
+    function render(filmsToShow) {
+      const grid = document.getElementById('films');
+      grid.innerHTML = '';
+      if (filmsToShow.length === 0) {
+        grid.innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Aucun film trouvé</p>';
+        return;
+      }
+      filmsToShow.forEach(f => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${f.poster}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+          <div class="info">
+            <h3>${f.title}</h3>
+            <p>${f.year}</p>
+          </div>
+        `;
+        card.onclick = () => {
+          currentFilm = f;
+          document.getElementById('ad1').classList.add('active');
+        };
+        grid.appendChild(card);
+      });
+    }
+
+    // Pubs
     function showAd2() {
       document.getElementById('ad1').classList.remove('active');
       const ad = document.createElement('script');
       ad.src = '//pl27976969.effectivegatecpm.com/f1/f2/7c/f1f27c6bc9906eca8322aec126ded56b.js';
       document.head.appendChild(ad);
       setTimeout(() => {
-        document.head.removeChild(ad);
+        if (document.head.contains(ad)) document.head.removeChild(ad);
         document.getElementById('ad2').classList.add('active');
       }, 5000);
-    }
-
-    let films = [];
-    let currentFilm = null;
-
-    fetch('films.json?t=' + Date.now())
-      .then(r => r.json())
-      .then(data => { films = data; render(); })
-      .catch(() => document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Aucun film</p>');
-
-    function render() {
-      const grid = document.getElementById('films');
-      grid.innerHTML = '';
-      films.forEach(f => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `<img src="${f.poster}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'"><div class="info"><h3>${f.title}</h3><p>${f.year}</p></div>`;
-        card.onclick = () => { currentFilm = f; document.getElementById('ad1').classList.add('active'); };
-        grid.appendChild(card);
-      });
     }
 
     function playFromAd() {
@@ -111,15 +131,33 @@
       play(currentFilm);
     }
 
+    // Lecture du film
     function play(f) {
       document.getElementById('currentTitle').textContent = f.title;
       const iframe = document.getElementById('player');
       const loading = document.getElementById('loadingMsg');
-      document.getElementById('playerContainer').classList.add('active');
+      const container = document.getElementById('playerContainer');
+
+      container.classList.add('active');
       loading.style.display = 'block';
       iframe.style.display = 'none';
-      iframe.src = f.embed;
-      iframe.onload = () => { loading.style.display = 'none'; iframe.style.display = 'block'; };
+
+      // Génération dynamique de l'embed vidsrc
+      const embedUrl = `https://vidsrc-embed.ru/embed/movie?tmdb=${f.tmdb}`;
+      iframe.src = embedUrl;
+
+      // Quand l'iframe charge
+      iframe.onload = () => {
+        loading.style.display = 'none';
+        iframe.style.display = 'block';
+      };
+
+      // Timeout au cas où ça bloque
+      setTimeout(() => {
+        if (loading.style.display !== 'none') {
+          loading.innerHTML = 'Lecteur bloqué ?<br><small>Essaie de désactiver l’adblock</small>';
+        }
+      }, 10000);
     }
 
     function closePlayer() {
@@ -127,9 +165,14 @@
       document.getElementById('player').src = '';
     }
 
+    // Recherche
     document.getElementById('search').oninput = () => {
-      const q = document.getElementById('search').value.toLowerCase();
-      render(films.filter(f => f.title.toLowerCase().includes(q)));
+      const q = document.getElementById('search').value.toLowerCase().trim();
+      const filtered = films.filter(f => 
+        f.title.toLowerCase().includes(q) || 
+        f.year.includes(q)
+      );
+      render(filtered);
     };
   </script>
 </body>
