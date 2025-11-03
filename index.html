@@ -20,12 +20,18 @@
     .info h3 { font-size:0.95rem; margin:5px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .info p { font-size:0.8rem; color:#bbb; }
     .badge { position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.7); color:#0f0; padding:3px 8px; border-radius:12px; font-size:0.7rem; font-weight:bold; }
+    .player-container { margin:20px auto; max-width:1000px; background:var(--card); border-radius:16px; overflow:hidden; box-shadow:0 8px 25px rgba(0,0,0,0.5); display:none; position:relative; }
+    .player-container.active { display:block; }
+    .player-header { background:var(--accent); color:white; padding:12px 15px; display:flex; justify-content:space-between; align-items:center; font-weight:bold; }
+    .close-player { background:none; border:none; color:white; font-size:1.5rem; cursor:pointer; }
+    iframe { width:100%; height:500px; border:none; }
+    .player-loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#aaa; font-size:1rem; text-align:center; display:block; }
     .admin-panel { display:none; background:var(--card); padding:20px; border-radius:16px; margin:20px auto; max-width:700px; }
     .admin-panel.active { display:block; }
     textarea { width:100%; padding:12px; background:#222; color:var(--text); border:none; border-radius:8px; font-size:1rem; margin:10px 0; }
     button { background:var(--accent); color:white; padding:12px 24px; border:none; border-radius:50px; cursor:pointer; font-size:1rem; margin:5px; }
     #status { margin:15px 0; font-weight:bold; color:#00ff88; }
-    .download { background:#333; color:#0f0; padding:10px; border-radius:8px; margin:10px 0; }
+    @media (max-width:600px){ iframe{height:300px;} }
   </style>
 </head>
 <body>
@@ -35,18 +41,28 @@
   </header>
 
   <div class="search-bar">
-    <input type="text" id="search" placeholder="Rechercher un film..." />
+    <input type="text" id="search" placeholder="Rechercher un film ou série..." />
   </div>
 
-  <div class="grid" id="films"></div>
+  <div class="grid" id="films">Chargement...</div>
 
+  <div class="player-container" id="playerContainer">
+    <div class="player-header">
+      <span id="currentTitle"></span>
+      <button class="close-player" onclick="closePlayer()">X</button>
+    </div>
+    <div class="player-loading" id="loadingMsg">Chargement...<br><small>2-3s</small></div>
+    <iframe id="player" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+  </div>
+
+  <!-- ADMIN PANEL -->
   <div class="admin-panel" id="adminPanel">
-    <h2>Créer un film (.html)</h2>
-    <p>Colle <strong>le code iframe complet</strong> → Génère un fichier .html</p>
+    <h2>Admin : Ajouter un film</h2>
+    <p>Colle <strong>le code iframe complet</strong></p>
     <textarea id="iframeInput" rows="5" placeholder='<iframe src="https://vidsrc-embed.ru/embed/movie?tmdb=569094" ...></iframe>'></textarea>
-    <button onclick="generateFilmFile()">Générer le fichier .html</button>
+    <button onclick="addFilmFromIframe()">Ajouter</button>
+    <button onclick="downloadJSON()">Télécharger films.json</button>
     <div id="status"></div>
-    <div id="downloadArea" class="download" style="display:none;"></div>
   </div>
 
   <script>
@@ -54,28 +70,58 @@
     let tapCount = 0;
     let tapTimer;
 
-    // === FILMS (à remplir manuellement) ===
-    films = [
-      // Ex: { title: "Spider-Man: No Way Home", year: "2021", poster: "...", file: "nowayhome.html" }
-    ];
+    // === CHARGER films.json ===
+    fetch('films.json?t=' + Date.now())
+      .then(r => r.json())
+      .then(data => { films = data; renderFilms(films); })
+      .catch(() => {
+        document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">films.json non trouvé. Ajoute un film !</p>';
+      });
 
-    function renderFilms() {
+    // === RENDU ===
+    function renderFilms(list) {
       const grid = document.getElementById('films');
       grid.innerHTML = '';
-      if (!films.length) {
-        grid.innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Aucun film (upload des .html)</p>';
-        return;
-      }
-      films.forEach(f => {
+      if (!list.length) { grid.innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Aucun film</p>'; return; }
+      list.forEach(f => {
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
           <img src="${f.poster}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+          ${f.type==='tv'?'<div class="badge">SÉRIE</div>':''}
           <div class="info"><h3>${f.title}</h3><p>${f.year}</p></div>
         `;
-        card.onclick = () => window.location.href = f.file;
+        card.onclick = () => playFilm(f);
         grid.appendChild(card);
       });
+    }
+
+    // === LECTURE ===
+    function playFilm(f) {
+      document.getElementById('currentTitle').textContent = f.title;
+      const iframe = document.getElementById('player');
+      const loading = document.getElementById('loadingMsg');
+      const container = document.getElementById('playerContainer');
+
+      container.classList.add('active');
+      loading.style.display = 'block';
+      iframe.style.display = 'none';
+
+      iframe.src = f.embed;
+
+      iframe.onload = () => {
+        loading.style.display = 'none';
+        iframe.style.display = 'block';
+      };
+
+      setTimeout(() => {
+        if (iframe.style.display === 'none') loading.innerHTML = 'Film indisponible.';
+      }, 10000);
+    }
+
+    function closePlayer() {
+      document.getElementById('playerContainer').classList.remove('active');
+      document.getElementById('player').src = '';
     }
 
     // === ADMIN (3 taps) ===
@@ -88,81 +134,58 @@
         const pwd = prompt('Mot de passe admin :');
         if (pwd === 'S0ox2025') {
           document.getElementById('adminPanel').classList.add('active');
+        } else if (pwd !== null) {
+          alert('Accès refusé.');
         }
       }
     });
 
-    // === GÉNÉRER FICHIER .HTML (FIX ID TMDB) ===
-    window.generateFilmFile = async function() {
+    // === AJOUTER DEPUIS IFRAME ===
+    window.addFilmFromIframe = async function() {
       const input = document.getElementById('iframeInput').value.trim();
       if (!input.includes('<iframe')) return alert('Colle un code iframe complet !');
 
       const srcMatch = input.match(/src=["']([^"']+)["']/);
-      if (!srcMatch) return alert('Lien non trouvé dans l’iframe');
+      if (!srcMatch) return alert('Lien non trouvé');
 
       const embedUrl = srcMatch[1];
-
-      // FIX : Accepte ?tmdb= ET /tmdb/
       const tmdbMatch = embedUrl.match(/(?:tmdb[=/])(\d+)/);
-      if (!tmdbMatch) return alert('ID TMDB manquant ! Vérifie le lien.');
+      if (!tmdbMatch) return alert('ID TMDB manquant !');
 
       const tmdbId = tmdbMatch[1];
-      const isTV = embedUrl.includes('/tv/') || embedUrl.includes('tv');
-      const type = isTV ? 'tv' : 'movie';
+      const type = embedUrl.includes('/tv/') ? 'tv' : 'movie';
 
       try {
         const res = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=15d2ea6d0dc1d476efbca3eba2b9bbfb&language=fr`);
         const media = await res.json();
 
-        if (!media.title && !media.name) throw new Error('Film non trouvé');
-
-        const title = (media.title || media.name).replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const year = (media.release_date || media.first_air_date)?.slice(0,4) || '0000';
-        const filename = `${title}_${year}.html`;
-
-        const htmlContent = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>${media.title || media.name} (${year}) - S0oxFlix</title>
-  <style>
-    body, html { margin:0; padding:0; height:100%; background:#000; }
-    iframe { width:100%; height:100%; border:none; }
-    .back { position:fixed; top:10px; left:10px; background:rgba(0,0,0,0.7); color:white; padding:10px 15px; border-radius:50px; text-decoration:none; font-family:Arial; z-index:999; font-size:0.9rem; }
-  </style>
-</head>
-<body>
-  <a href="index.html" class="back">Retour</a>
-  ${input}
-</body>
-</html>`;
-
-        // Téléchargement
-        const blob = new Blob([htmlContent], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-
-        // Ajouter à la liste
-        films.push({
+        const newFilm = {
+          id: tmdbId,
           title: media.title || media.name,
-          year: year,
+          year: (media.release_date || media.first_air_date)?.slice(0,4) || 'N/A',
           poster: `https://image.tmdb.org/t/p/w500${media.poster_path}`,
-          file: filename
-        });
-        renderFilms();
+          embed: embedUrl,
+          type: type
+        };
 
-        document.getElementById('status').innerHTML = `Fichier <strong>${filename}</strong> généré ! Upload-le sur Netlify.`;
-        document.getElementById('downloadArea').style.display = 'block';
-        document.getElementById('downloadArea').innerHTML = `Télécharge <code>${filename}</code> → Upload sur Netlify → Film live !`;
-
+        films.push(newFilm);
+        renderFilms(films);
+        document.getElementById('status').innerHTML = 'Film ajouté ! Clique sur "Télécharger films.json" puis upload.';
+        document.getElementById('iframeInput').value = '';
       } catch (e) {
-        alert('Erreur : ' + (e.message || 'TMDB ou connexion'));
+        alert('Erreur TMDB');
       }
+    };
+
+    // === TÉLÉCHARGER films.json ===
+    window.downloadJSON = function() {
+      const blob = new Blob([JSON.stringify(films, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'films.json';
+      a.click();
+      document.getElementById('status').innerHTML = 'films.json téléchargé ! Upload-le sur Netlify → Site mis à jour !';
     };
 
     // === RECHERCHE ===
@@ -171,8 +194,6 @@
       const filtered = films.filter(f => f.title.toLowerCase().includes(q));
       renderFilms(filtered);
     });
-
-    renderFilms();
   </script>
 </body>
 </html>
