@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>S0oxFlix</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S0oxFlix - Streaming HD</title>
   <style>
     :root { --bg:#0f0a1a; --card:#1a0d33; --accent:#6a1b9a; --text:#e0d0ff; }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:var(--bg); color:var(--text); font-family:Arial; min-height:100vh; }
-    header { background:var(--accent); padding:20px; text-align:center; font-size:1.8rem; font-weight:bold; }
-    .tap-target { -webkit-tap-highlight-color: transparent; user-select: none; }
+    body { background:var(--bg); color:var(--text); font-family:Arial, sans-serif; min-height:100vh; }
+    header { background:var(--accent); padding:20px; text-align:center; font-size:1.8rem; font-weight:bold; position:sticky; top:0; z-index:100; }
+    .tap-target { cursor:pointer; }
     .search-bar { padding:15px; text-align:center; }
     #search { width:90%; max-width:500px; padding:12px; background:var(--card); color:var(--text); border:none; border-radius:30px; font-size:1rem; }
     .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:15px; padding:20px; }
@@ -19,6 +19,7 @@
     .info { padding:10px; text-align:center; }
     .info h3 { font-size:0.95rem; margin:5px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .info p { font-size:0.8rem; color:#bbb; }
+    .badge { position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.7); color:#0f0; padding:3px 8px; border-radius:12px; font-size:0.7rem; font-weight:bold; }
     .player-container { margin:20px auto; max-width:1000px; background:var(--card); border-radius:16px; overflow:hidden; box-shadow:0 8px 25px rgba(0,0,0,0.5); display:none; position:relative; }
     .player-container.active { display:block; }
     .player-header { background:var(--accent); color:white; padding:12px 15px; display:flex; justify-content:space-between; align-items:center; font-weight:bold; }
@@ -31,6 +32,12 @@
     button { background:var(--accent); color:white; padding:12px 24px; border:none; border-radius:50px; cursor:pointer; font-size:1rem; margin:5px; }
     button:disabled { background:#444; cursor:not-allowed; }
     #status { margin:15px 0; font-weight:bold; color:#0f0; }
+    .popup { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; z-index:1000; }
+    .popup.active { display:flex; align-items:center; justify-content:center; }
+    .popup-content { background:var(--card); padding:30px; border-radius:16px; text-align:center; max-width:400px; }
+    .popup-content h3 { color:var(--accent); margin-bottom:10px; }
+    .popup-content p { margin-bottom:20px; color:#aaa; }
+    .popup-btn { background:var(--accent); color:white; padding:12px 24px; border:none; border-radius:50px; cursor:pointer; margin:5px; }
     @media (max-width:600px){ iframe{height:300px;} }
   </style>
 </head>
@@ -41,7 +48,7 @@
   </header>
 
   <div class="search-bar">
-    <input type="text" id="search" placeholder="Rechercher un film..." />
+    <input type="text" id="search" placeholder="Rechercher un film ou série..." />
   </div>
 
   <div class="grid" id="films">Chargement...</div>
@@ -55,42 +62,97 @@
     <iframe id="player" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
   </div>
 
+  <!-- POPUP ADS 1 -->
+  <div class="popup" id="adsPopup1">
+    <div class="popup-content">
+      <h3>ATTENTION ADS!</h3>
+      <p>Merci de votre soutien et dsl</p>
+      <button class="popup-btn" onclick="showAdThenThanks()">Continuer</button>
+    </div>
+  </div>
+
+  <!-- POPUP ADS 2 -->
+  <div class="popup" id="adsPopup2">
+    <div class="popup-content">
+      <h3>Merci de ton soutien !</h3>
+      <p>Maintenant, regarde le film</p>
+      <button class="popup-btn" onclick="playFilmFromPopup()">Regarder le film</button>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
   <div class="admin-panel" id="adminPanel">
-    <h2>Ajouter un film</h2>
-    <p>Colle le code iframe de <strong>vidsrc.to</strong></p>
-    <textarea id="iframeInput" rows="3" placeholder='<iframe src="https://vidsrc.to/embed/movie/569094"...'></textarea>
+    <h2>Admin : Ajouter un film</h2>
+    <p>Colle le code iframe VidSrc complet</p>
+    <textarea id="iframeInput" rows="5" placeholder='<iframe src="https://vidsrc.xyz/embed/movie/tt9362722" style="width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>'></textarea>
     <button onclick="addFilm()">Ajouter</button>
     <button onclick="downloadJSON()" id="saveBtn" disabled>Sauvegarder</button>
     <div id="status">Prêt !</div>
   </div>
 
   <script>
-    let films = [];
-    const downloadBtn = document.getElementById('saveBtn');
+    // Bloqueur pubs VidSrc (2025)
+    window.addEventListener('load', () => {
+      const pubScript = document.querySelector('script[src*="effectivegatecpm.com"]');
+      if (pubScript) pubScript.remove();
+      const originalOpen = window.open;
+      window.open = (url) => {
+        if (url.includes('effectivegatecpm.com') || url.includes('ads')) return null;
+        return originalOpen(url);
+      };
+    });
 
-    // Charger films.json
-    fetch('films.json?' + Date.now())
+    let films = [];
+    let currentFilm = null;
+    let taps = 0;
+    let tapTimer;
+
+    // Load films.json
+    fetch('films.json?t=' + Date.now())
       .then(r => r.json())
-      .then(data => { films = data; render(); })
+      .then(data => { films = data; renderFilms(films); })
       .catch(() => document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Aucun film</p>');
 
-    function render() {
+    function renderFilms(list) {
       const grid = document.getElementById('films');
       grid.innerHTML = '';
-      films.forEach(f => {
+      if (!list.length) { grid.innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Aucun film</p>'; return; }
+      list.forEach(f => {
         const card = document.createElement('div');
         card.className = 'card';
-        card.innerHTML = `<img src="${f.poster}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'"><div class="info"><h3>${f.title}</h3><p>${f.year}</p></div>`;
-        card.onclick = () => play(f);
+        card.innerHTML = `
+          <img src="${f.poster}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+          <div class="info"><h3>${f.title}</h3><p>${f.year}</p></div>
+        `;
+        card.onclick = () => showAdsPopup(f);
         grid.appendChild(card);
       });
     }
 
-    function play(f) {
+    function showAdsPopup(f) {
+      currentFilm = f;
+      document.getElementById('adsPopup1').classList.add('active');
+    }
+
+    function showAdThenThanks() {
+      document.getElementById('adsPopup1').classList.remove('active');
+      // Simule ad (5s delay + script ad simple)
+      setTimeout(() => {
+        document.getElementById('adsPopup2').classList.add('active');
+      }, 5000); // 5s ad delay
+    }
+
+    function playFilmFromPopup() {
+      document.getElementById('adsPopup2').classList.remove('active');
+      playFilm(currentFilm);
+    }
+
+    function playFilm(f) {
       document.getElementById('currentTitle').textContent = f.title;
       const iframe = document.getElementById('player');
       const loading = document.getElementById('loadingMsg');
-      document.getElementById('playerContainer').classList.add('active');
+      const container = document.getElementById('playerContainer');
+      container.classList.add('active');
       loading.style.display = 'block';
       iframe.style.display = 'none';
       iframe.src = f.embed;
@@ -103,43 +165,56 @@
     }
 
     // Admin (3 taps)
-    let taps = 0;
     document.getElementById('titleTap').onclick = () => {
-      taps++; setTimeout(() => taps = 0, 1000);
-      if (taps === 3) { taps = 0; if (prompt('Mot de passe :') === 'S0ox2025') document.getElementById('adminPanel').classList.add('active'); }
+      taps++;
+      clearTimeout(tapTimer);
+      tapTimer = setTimeout(() => taps = 0, 1000);
+      if (taps === 3) {
+        taps = 0;
+        if (prompt('Mot de passe :') === 'S0ox2025') document.getElementById('adminPanel').classList.add('active');
+      }
     };
 
-    // Ajouter film
     window.addFilm = async () => {
-      const code = document.getElementById('iframeInput').value.trim();
-      const src = code.match(/src=["']([^"']+)["']/);
-      if (!src) return alert('Iframe invalide');
-      const embed = src[1];
-      const tmdb = embed.match(/(\d+)$/);
-      if (!tmdb) return alert('ID manquant');
-      const id = tmdb[1];
-      const res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=15d2ea6d0dc1d476efbca3eba2b9bbfb&language=fr`);
-      const m = await res.json();
-      films.push({ title: m.title, year: m.release_date?.slice(0,4), poster: `https://image.tmdb.org/t/p/w500${m.poster_path}`, embed });
-      render();
-      downloadBtn.disabled = false;
-      document.getElementById('status').textContent = 'Ajouté ! Clique sur Sauvegarder';
+      const input = document.getElementById('iframeInput').value.trim();
+      if (!input.includes('<iframe')) return alert('Colle un code iframe !');
+      const srcMatch = input.match(/src=["']([^"']+)["']/);
+      if (!srcMatch) return alert('Lien non trouvé');
+      const embedUrl = srcMatch[1];
+      const tmdbMatch = embedUrl.match(/(?:tmdb=) ([\d]+)/);
+      if (!tmdbMatch) return alert('ID TMDB manquant');
+      const tmdbId = tmdbMatch[1];
+      try {
+        const res = await fetch(`https://api.themoviedb.org/3/movie/${tmdbId}?api_key=15d2ea6d0dc1d476efbca3eba2b9bbfb&language=fr`);
+        const movie = await res.json();
+        films.push({
+          title: movie.title,
+          year: movie.release_date?.slice(0,4) || 'N/A',
+          poster: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
+          embed: embedUrl
+        });
+        renderFilms(films);
+        document.getElementById('saveBtn').disabled = false;
+        document.getElementById('status').textContent = 'Film ajouté ! Clique Sauvegarder.';
+        document.getElementById('iframeInput').value = '';
+      } catch (e) {
+        alert('Erreur TMDB');
+      }
     };
 
-    // Sauvegarder
     window.downloadJSON = () => {
+      if (films.length === 0) return alert('Aucun film');
       const blob = new Blob([JSON.stringify(films, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'films.json';
       a.click();
-      document.getElementById('status').textContent = 'Téléchargé ! Upload sur Netlify';
+      document.getElementById('status').textContent = 'Téléchargé ! Upload sur Netlify.';
     };
 
-    // Recherche
     document.getElementById('search').oninput = () => {
       const q = document.getElementById('search').value.toLowerCase();
-      render(films.filter(f => f.title.toLowerCase().includes(q)));
+      renderFilms(films.filter(f => f.title.toLowerCase().includes(q)));
     };
   </script>
 </body>
