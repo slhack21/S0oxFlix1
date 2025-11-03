@@ -9,6 +9,7 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:var(--bg); color:var(--text); font-family:Arial; min-height:100vh; }
     header { background:var(--accent); padding:20px; text-align:center; font-size:1.8rem; font-weight:bold; }
+    .tap-target { -webkit-tap-highlight-color: transparent; user-select: none; }
     .search-bar { padding:15px; text-align:center; }
     #search { width:90%; max-width:500px; padding:12px; background:var(--card); color:var(--text); border:none; border-radius:30px; font-size:1rem; }
     .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:15px; padding:20px; }
@@ -29,7 +30,9 @@
   </style>
 </head>
 <body>
-  <header><h1>S0oxFlix</h1></header>
+  <header>
+    <h1 class="tap-target" id="titleTap">S0oxFlix</h1>
+  </header>
 
   <div class="search-bar">
     <input type="text" id="search" placeholder="Rechercher un film ou série..." />
@@ -47,20 +50,32 @@
 
   <script>
     let films = [];
+    let tapCount = 0;
+    let tapTimer;
+
+    // CHARGEMENT FILMS
     fetch('films.json?t=' + Date.now())
       .then(r => r.json())
       .then(data => { films = data; renderFilms(films); })
       .catch(() => alert('films.json introuvable'));
 
+    // RECHERCHE
     document.getElementById('search').addEventListener('input', () => {
       const q = document.getElementById('search').value.trim().toLowerCase();
       const filtered = films.filter(f => f.title.toLowerCase().includes(q) || f.overview.toLowerCase().includes(q));
       renderFilms(filtered);
     });
 
-    // ACCÈS ADMIN ULTRA-CACHÉ : Ctrl + Shift + A
-    document.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+    // ACCÈS ADMIN : 3 TAPS SUR LE TITRE (MOBILE)
+    document.getElementById('titleTap').addEventListener('click', () => {
+      tapCount++;
+      clearTimeout(tapTimer);
+      tapTimer = setTimeout(() => {
+        tapCount = 0;
+      }, 1000);
+
+      if (tapCount === 3) {
+        tapCount = 0;
         const pwd = prompt('Mot de passe admin :');
         if (pwd === 'S0ox2025') { // CHANGE CE MOT DE PASSE !
           window.location.href = 'admin.html';
@@ -70,6 +85,7 @@
       }
     });
 
+    // RENDU DES FILMS
     function renderFilms(list) {
       const grid = document.getElementById('films');
       grid.innerHTML = '';
