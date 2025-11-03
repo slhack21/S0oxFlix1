@@ -12,7 +12,7 @@
     .search-bar { padding:15px; text-align:center; }
     #search { width:90%; max-width:500px; padding:12px; background:var(--card); color:var(--text); border:none; border-radius:30px; font-size:1rem; }
     .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:15px; padding:20px; }
-    .card { background:var(--card); border-radius:12px; overflow:hidden; cursor:pointer; transition:0.3s; position:relative; }
+    .card { background:var(--card); border-radius:12px; overflow:hidden; cursor:pointer; transition:0.3s; }
     .card:hover { transform:scale(1.05); box-shadow:0 5px 15px rgba(106,27,154,0.4); }
     .card img { width:100%; height:200px; object-fit:cover; }
     .info { padding:10px; text-align:center; }
@@ -48,24 +48,23 @@
       <span id="currentTitle"></span>
       <button class="close-player" onclick="closePlayer()">X</button>
     </div>
-    <div class="player-loading" id="loadingMsg">Chargement du film...<br><small>2-3s</small></div>
+    <div class="player-loading" id="loadingMsg">Chargement...<br><small>2-3s</small></div>
     <iframe id="player" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
   </div>
 
-  <!-- Popup ADS 1 -->
+  <!-- ADS -->
   <div class="popup" id="ad1">
     <div class="popup-content">
       <h3>ATTENTION ADS!</h3>
-      <p>Merci de votre soutien !</p>
+      <p>Merci de ton soutien !</p>
       <button class="popup-btn" onclick="showAd2()">Continuer</button>
     </div>
   </div>
 
-  <!-- Popup ADS 2 -->
   <div class="popup" id="ad2">
     <div class="popup-content">
-      <h3>Merci de ton soutien !</h3>
-      <p>Le film va démarrer...</p>
+      <h3>Merci !</h3>
+      <p>Le film démarre...</p>
       <button class="popup-btn" onclick="playFromAd()">Regarder</button>
     </div>
   </div>
@@ -74,37 +73,30 @@
     let films = [];
     let currentFilm = null;
 
-    // Chargement des films
+    // Charger films.json
     fetch('films.json?t=' + Date.now())
-      .then(r => {
-        if (!r.ok) throw new Error('Fichier non trouvé');
-        return r.json();
-      })
+      .then(r => r.json())
       .then(data => {
         films = data;
         render(films);
       })
-      .catch(err => {
-        console.error(err);
-        document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Erreur : films.json introuvable ou mal formé</p>';
+      .catch(() => {
+        document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Erreur : films.json manquant</p>';
       });
 
-    function render(filmsToShow) {
+    function render(list) {
       const grid = document.getElementById('films');
       grid.innerHTML = '';
-      if (filmsToShow.length === 0) {
-        grid.innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Aucun film trouvé</p>';
+      if (list.length === 0) {
+        grid.innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Aucun film</p>';
         return;
       }
-      filmsToShow.forEach(f => {
+      list.forEach(f => {
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
           <img src="${f.poster}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
-          <div class="info">
-            <h3>${f.title}</h3>
-            <p>${f.year}</p>
-          </div>
+          <div class="info"><h3>${f.title}</h3><p>${f.year}</p></div>
         `;
         card.onclick = () => {
           currentFilm = f;
@@ -131,7 +123,7 @@
       play(currentFilm);
     }
 
-    // Lecture du film
+    // Lecture directe avec l'URL embed
     function play(f) {
       document.getElementById('currentTitle').textContent = f.title;
       const iframe = document.getElementById('player');
@@ -142,20 +134,16 @@
       loading.style.display = 'block';
       iframe.style.display = 'none';
 
-      // Génération dynamique de l'embed vidsrc
-      const embedUrl = `https://vidsrc-embed.ru/embed/movie?tmdb=${f.tmdb}`;
-      iframe.src = embedUrl;
+      iframe.src = f.embed;  // URL complète ici !
 
-      // Quand l'iframe charge
       iframe.onload = () => {
         loading.style.display = 'none';
         iframe.style.display = 'block';
       };
 
-      // Timeout au cas où ça bloque
       setTimeout(() => {
         if (loading.style.display !== 'none') {
-          loading.innerHTML = 'Lecteur bloqué ?<br><small>Essaie de désactiver l’adblock</small>';
+          loading.innerHTML = 'Lecteur bloqué ?<br><small>Désactive l’adblock</small>';
         }
       }, 10000);
     }
@@ -169,8 +157,7 @@
     document.getElementById('search').oninput = () => {
       const q = document.getElementById('search').value.toLowerCase().trim();
       const filtered = films.filter(f => 
-        f.title.toLowerCase().includes(q) || 
-        f.year.includes(q)
+        f.title.toLowerCase().includes(q) || f.year.includes(q)
       );
       render(filtered);
     };
