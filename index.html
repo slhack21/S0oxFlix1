@@ -29,7 +29,7 @@
   </style>
 </head>
 <body>
-  <header><h1>🎬 S0oxFlix</h1></header>
+  <header id="header"><h1>🎬 S0oxFlix</h1></header>
   <input type="text" id="search" placeholder="🔍 Rechercher un film..." onkeyup="filterFilms()">
   <div class="grid" id="films"></div>
 
@@ -69,7 +69,7 @@
         t: "Night of the Living Dead",
         y: 1968,
         img: "https://upload.wikimedia.org/wikipedia/en/6/68/Night_living_dead_poster.jpg",
-        url: "https://archive.org/download/night_of_the_living_dead/night_of_the_living_dead.mp4",
+        url: "https://publicdomainmovie.net/wp-content/uploads/2019/10/Night-of-the-Living-Dead-1968-HD.mp4",
         desc: "Un groupe se réfugie dans une ferme contre une horde de zombies. Culte des morts-vivants.",
         actors: "Duane Jones, Judith O'Dea, Karl Hardman",
         duration: "1h36"
@@ -78,7 +78,7 @@
         t: "Metropolis",
         y: 1927,
         img: "https://upload.wikimedia.org/wikipedia/commons/2/2c/Metropolis_1927.jpg",
-        url: "https://archive.org/download/Metropolis_1927/Metropolis_1927.mp4",
+        url: "https://publicdomainmovie.net/wp-content/uploads/2019/10/Metropolis-1927-HD.mp4",
         desc: "Cité futuriste : révolte ouvrière contre l'élite. Chef-d'œuvre muet.",
         actors: "Brigitte Helm, Alfred Abel, Gustav Fröhlich",
         duration: "2h29"
@@ -87,7 +87,7 @@
         t: "Nosferatu",
         y: 1922,
         img: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Nosferatu-poster.jpg",
-        url: "https://archive.org/download/Nosferatu_1922/Nosferatu_1922.mp4",
+        url: "https://publicdomainmovie.net/wp-content/uploads/2019/10/Nosferatu-1922-HD.mp4",
         desc: "Vampire Orlok apporte la peste. Premier film d'horreur gothique.",
         actors: "Max Schreck, Greta Schröder",
         duration: "1h34"
@@ -156,7 +156,7 @@
 
     function openAd() {
       document.getElementById('adPopup').classList.add('hidden');
-      // ADSTERRA FIXED - RELANCE À CHAQUE CLIC
+      // ADSTERRA FIXED - NOUVEAU SCRIPT + RELANCE
       const adsterraScript = document.createElement('script');
       adsterraScript.src = '//pl27976969.effectivegatecpm.com/f1/f2/7c/f1f27c6bc9906eca8322aec126ded56b.js';
       document.head.appendChild(adsterraScript);
@@ -170,9 +170,9 @@
       const video = document.getElementById('player');
       video.classList.remove('hidden');
       const url = window.currentFilm.url;
-      video.src = url; // MP4 DIRECT - MARCHE SANS HLS
+      video.src = url;
       video.load();
-      video.play().catch(e => console.log('Play error:', e)); // AUTO-PLAY FIXED
+      video.play().catch(e => console.log('Play error:', e));
       document.getElementById('playBtn').style.display = 'none';
     }
 
