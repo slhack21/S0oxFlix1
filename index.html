@@ -24,6 +24,7 @@
     .close-player { background:none; border:none; color:white; font-size:1.5rem; cursor:pointer; }
     iframe { width:100%; height:500px; border:none; display:none; }
     .player-loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#aaa; font-size:1rem; text-align:center; display:block; z-index:1; }
+    .player-error { color:#ff6b6b; background:#1a0d33; padding:20px; border-radius:8px; text-align:center; display:none; }
     .popup { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; z-index:1000; align-items:center; justify-content:center; }
     .popup.active { display:flex; }
     .popup-content { background:var(--card); padding:30px; border-radius:16px; text-align:center; max-width:400px; }
@@ -49,6 +50,7 @@
       <button class="close-player" onclick="closePlayer()">X</button>
     </div>
     <div class="player-loading" id="loadingMsg">Chargement...<br><small>2-3s</small></div>
+    <div class="player-error" id="errorMsg">Erreur de chargement.<br><small>Essaie de changer de vidsrc ou désactive l'adblock</small><br><button class="popup-btn" onclick="retryPlay()">Réessayer</button></div>
     <iframe id="player" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
   </div>
 
@@ -123,34 +125,46 @@
       play(currentFilm);
     }
 
-    // Lecture directe avec l'URL embed
+    let loadTimeout;
+
+    // Lecture avec anti-infini
     function play(f) {
       document.getElementById('currentTitle').textContent = f.title;
       const iframe = document.getElementById('player');
       const loading = document.getElementById('loadingMsg');
+      const error = document.getElementById('errorMsg');
       const container = document.getElementById('playerContainer');
 
       container.classList.add('active');
       loading.style.display = 'block';
+      error.style.display = 'none';
       iframe.style.display = 'none';
 
-      iframe.src = f.embed;  // URL complète ici !
+      iframe.src = f.embed;
+
+      // Timeout 10s pour détecter le bug
+      loadTimeout = setTimeout(() => {
+        if (loading.style.display !== 'none') {
+          loading.style.display = 'none';
+          error.style.display = 'block';
+        }
+      }, 10000);
 
       iframe.onload = () => {
+        clearTimeout(loadTimeout);
         loading.style.display = 'none';
         iframe.style.display = 'block';
       };
+    }
 
-      setTimeout(() => {
-        if (loading.style.display !== 'none') {
-          loading.innerHTML = 'Lecteur bloqué ?<br><small>Désactive l’adblock</small>';
-        }
-      }, 10000);
+    function retryPlay() {
+      if (currentFilm) play(currentFilm);
     }
 
     function closePlayer() {
       document.getElementById('playerContainer').classList.remove('active');
       document.getElementById('player').src = '';
+      clearTimeout(loadTimeout);
     }
 
     // Recherche
