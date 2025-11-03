@@ -8,7 +8,8 @@
     :root { --bg:#0f0a1a; --card:#1a0d33; --accent:#6a1b9a; --text:#e0d0ff; }
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:var(--bg); color:var(--text); font-family:Arial; min-height:100vh; }
-    header { background:var(--accent); padding:20px; text-align:center; font-size:1.8rem; font-weight:bold; }
+    header { background:var(--accent); padding:20px; text-align:center; font-size:1.8rem; font-weight:bold; position:sticky; top:0; z-index:100; }
+    .tap-target { cursor:pointer; }
     .search-bar { padding:15px; text-align:center; }
     #search { width:90%; max-width:500px; padding:12px; background:var(--card); color:var(--text); border:none; border-radius:30px; font-size:1rem; }
     .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:15px; padding:20px; }
@@ -28,6 +29,7 @@
     .popup.active { display:flex; align-items:center; justify-content:center; }
     .popup-content { background:var(--card); padding:30px; border-radius:16px; text-align:center; max-width:400px; }
     .popup-content h3 { color:var(--accent); margin-bottom:10px; }
+    .popup-content p { margin-bottom:20px; color:#aaa; }
     .popup-btn { background:var(--accent); color:white; padding:12px 24px; border:none; border-radius:50px; cursor:pointer; margin:5px; }
     @media (max-width:600px){ iframe{height:300px;} }
   </style>
@@ -72,14 +74,14 @@
   </div>
 
   <script>
-    // Bloqueur pubs VidSrc
+    // Bloqueur pubs VidSrc (enlève redirections inutiles)
     window.addEventListener('load', () => {
       const adScript = document.querySelector('script[src*="effectivegatecpm.com"]');
       if (adScript) adScript.remove();
       const oldOpen = window.open;
       window.open = (url) => {
-        if (url.includes('effectivegatecpm.com') || url.includes('ads')) return null;
-        return oldOpen(url);
+        if (url.includes('effectivegatecpm.com') && !url.includes('your-ad-link')) return null; // Bloque sauf ta redirection
+        return oldOpen(url, '_blank'); // Ouvre en nouveau tab pour redirection
       };
     });
 
@@ -112,7 +114,15 @@
 
     function showAd2() {
       document.getElementById('ad1').classList.remove('active');
-      setTimeout(() => document.getElementById('ad2').classList.add('active'), 5000); // 5s ad delay
+      // Charge ton script ad (redirection)
+      const adScript = document.createElement('script');
+      adScript.src = '//pl27976969.effectivegatecpm.com/f1/f2/7c/f1f27c6bc9906eca8322aec126ded56b.js';
+      document.head.appendChild(adScript);
+      // Retour après 5s (redirection s'ouvre en tab)
+      setTimeout(() => {
+        document.head.removeChild(adScript);
+        document.getElementById('ad2').classList.add('active');
+      }, 5000);
     }
 
     function playFromAd() {
