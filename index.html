@@ -30,7 +30,10 @@
     .admin-panel.active { display:block; }
     textarea { width:100%; padding:12px; background:#222; color:var(--text); border:none; border-radius:8px; font-size:1rem; margin:10px 0; }
     button { background:var(--accent); color:white; padding:12px 24px; border:none; border-radius:50px; cursor:pointer; font-size:1rem; margin:5px; }
-    #status { margin:15px 0; font-weight:bold; color:#00ff88; }
+    button:disabled { background:#444; cursor:not-allowed; }
+    #status { margin:15px 0; font-weight:bold; }
+    .success { color:#0f0; }
+    .error { color:#ff3366; }
     @media (max-width:600px){ iframe{height:300px;} }
   </style>
 </head>
@@ -60,22 +63,23 @@
     <h2>Admin : Ajouter un film</h2>
     <p>Colle <strong>le code iframe complet</strong></p>
     <textarea id="iframeInput" rows="5" placeholder='<iframe src="https://vidsrc-embed.ru/embed/movie?tmdb=569094" ...></iframe>'></textarea>
-    <button onclick="addFilmFromIframe()">Ajouter</button>
-    <button onclick="downloadJSON()">Télécharger films.json</button>
-    <div id="status"></div>
+    <button onclick="addFilmFromIframe()">1. Ajouter le film</button>
+    <button onclick="downloadJSON()" id="downloadBtn" disabled>2. Télécharger films.json</button>
+    <div id="status">Prêt !</div>
   </div>
 
   <script>
     let films = [];
     let tapCount = 0;
     let tapTimer;
+    const downloadBtn = document.getElementById('downloadBtn');
 
     // === CHARGER films.json ===
     fetch('films.json?t=' + Date.now())
       .then(r => r.json())
       .then(data => { films = data; renderFilms(films); })
       .catch(() => {
-        document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">films.json non trouvé. Ajoute un film !</p>';
+        document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">films.json non trouvé. Utilise l\'admin !</p>';
       });
 
     // === RENDU ===
@@ -113,10 +117,6 @@
         loading.style.display = 'none';
         iframe.style.display = 'block';
       };
-
-      setTimeout(() => {
-        if (iframe.style.display === 'none') loading.innerHTML = 'Film indisponible.';
-      }, 10000);
     }
 
     function closePlayer() {
@@ -124,7 +124,7 @@
       document.getElementById('player').src = '';
     }
 
-    // === ADMIN (3 taps) ===
+    // === ADMIN ===
     document.getElementById('titleTap').addEventListener('click', () => {
       tapCount++;
       clearTimeout(tapTimer);
@@ -140,7 +140,7 @@
       }
     });
 
-    // === AJOUTER DEPUIS IFRAME ===
+    // === AJOUTER FILM (ET ACTIVER LE BOUTON) ===
     window.addFilmFromIframe = async function() {
       const input = document.getElementById('iframeInput').value.trim();
       if (!input.includes('<iframe')) return alert('Colle un code iframe complet !');
@@ -170,22 +170,29 @@
 
         films.push(newFilm);
         renderFilms(films);
-        document.getElementById('status').innerHTML = 'Film ajouté ! Clique sur "Télécharger films.json" puis upload.';
+
+        // ACTIVER LE BOUTON + MESSAGE
+        downloadBtn.disabled = false;
+        document.getElementById('status').innerHTML = '<span class="success">Film ajouté ! Clique sur "2. Télécharger films.json" (le fichier sera NON VIDE)</span>';
         document.getElementById('iframeInput').value = '';
       } catch (e) {
         alert('Erreur TMDB');
       }
     };
 
-    // === TÉLÉCHARGER films.json ===
+    // === TÉLÉCHARGER JSON (GARANTI NON VIDE) ===
     window.downloadJSON = function() {
+      if (films.length === 0) {
+        alert('Aucun film ajouté !');
+        return;
+      }
       const blob = new Blob([JSON.stringify(films, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'films.json';
       a.click();
-      document.getElementById('status').innerHTML = 'films.json téléchargé ! Upload-le sur Netlify → Site mis à jour !';
+      document.getElementById('status').innerHTML = '<span class="success">films.json téléchargé ! Upload-le sur Netlify → Film visible !</span>';
     };
 
     // === RECHERCHE ===
