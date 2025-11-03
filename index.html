@@ -8,10 +8,10 @@
     :root { --bg:#0f0a1a; --card:#1a0d33; --accent:#6a1b9a; --text:#e0d0ff; }
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:var(--bg); color:var(--text); font-family:Arial; min-height:100vh; }
-    header { background:var(--accent); padding:20px; text-align:center; font-size:1.8rem; font-weight:bold; }
+    header { background:var(--accent); padding:20px; text-align:center; font-size:1.8rem; font-weight:bold; color:white; }
     .search-bar { padding:15px; text-align:center; }
     #search { width:90%; max-width:500px; padding:12px; background:var(--card); color:var(--text); border:none; border-radius:30px; font-size:1rem; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:15px; padding:20px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minminmax(150px,1fr)); gap:15px; padding:20px; }
     .card { background:var(--card); border-radius:12px; overflow:hidden; cursor:pointer; transition:0.3s; }
     .card:hover { transform:scale(1.05); box-shadow:0 5px 15px rgba(106,27,154,0.4); }
     .card img { width:100%; height:200px; object-fit:cover; }
@@ -52,7 +52,7 @@
     <iframe id="player" allowfullscreen allow="autoplay; fullscreen; encrypted-media" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
   </div>
 
-  <!-- LES 2 POPUPS ADS (COMME AVANT) -->
+  <!-- ADS -->
   <div class="popup" id="ad1">
     <div class="popup-content">
       <h3>ATTENTION ADS!</h3>
@@ -79,13 +79,18 @@
         films = data;
         render(films);
       })
-      .catch(() => {
-        document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Erreur : films.json manquant</p>';
+      .catch(err => {
+        console.error(err);
+        document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Erreur : films.json introuvable</p>';
       });
 
     function render(list) {
       const grid = document.getElementById('films');
       grid.innerHTML = '';
+      if (!list || list.length === 0) {
+        grid.innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Aucun film</p>';
+        return;
+      }
       list.forEach(f => {
         const card = document.createElement('div');
         card.className = 'card';
@@ -125,12 +130,23 @@
       loading.style.display = 'block';
       iframe.style.display = 'none';
 
-      iframe.src = f.embed + '?t=' + Date.now(); // Anti-cache
+      // FORCER LE RECHARGEMENT
+      iframe.src = '';
+      setTimeout(() => {
+        iframe.src = f.embed;
+      }, 100);
 
       iframe.onload = () => {
         loading.style.display = 'none';
         iframe.style.display = 'block';
       };
+
+      // Timeout si ça bug
+      setTimeout(() => {
+        if (loading.style.display !== 'none') {
+          loading.innerHTML = 'Lecteur bloqué ?<br><small>Essaie un autre film</small>';
+        }
+      }, 10000);
     }
 
     function closePlayer() {
