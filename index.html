@@ -53,27 +53,22 @@
     let tapCount = 0;
     let tapTimer;
 
-    // CHARGEMENT FILMS
     fetch('films.json?t=' + Date.now())
       .then(r => r.json())
       .then(data => { films = data; renderFilms(films); })
-      .catch(() => alert('films.json introuvable'));
+      .catch(() => console.log('films.json non trouvé'));
 
-    // RECHERCHE
     document.getElementById('search').addEventListener('input', () => {
       const q = document.getElementById('search').value.trim().toLowerCase();
       const filtered = films.filter(f => f.title.toLowerCase().includes(q) || f.overview.toLowerCase().includes(q));
       renderFilms(filtered);
     });
 
-    // ACCÈS ADMIN : 3 TAPS SUR LE TITRE (MOBILE)
+    // ADMIN : 3 TAPS SUR LE TITRE
     document.getElementById('titleTap').addEventListener('click', () => {
       tapCount++;
       clearTimeout(tapTimer);
-      tapTimer = setTimeout(() => {
-        tapCount = 0;
-      }, 1000);
-
+      tapTimer = setTimeout(() => tapCount = 0, 1000);
       if (tapCount === 3) {
         tapCount = 0;
         const pwd = prompt('Mot de passe admin :');
@@ -85,7 +80,6 @@
       }
     });
 
-    // RENDU DES FILMS
     function renderFilms(list) {
       const grid = document.getElementById('films');
       grid.innerHTML = '';
