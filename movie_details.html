@@ -17,7 +17,7 @@
     .title { font-size:2.4rem; color:var(--accent); margin-bottom:8px; }
     .meta { color:#ccc; margin-bottom:15px; }
     .synopsis { line-height:1.7; color:#ddd; margin-bottom:25px; }
-    .player { background:var(--card); border-radius:16px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
+    .player { background:var(--card); border-radius:16px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5); position:relative; }
     .player-header { background:var(--accent); color:white; padding:14px 20px; font-weight:bold; display:flex; justify-content:space-between; align-items:center; }
     iframe { width:100%; height:520px; border:none; }
     .loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#aaa; font-size:1.2rem; }
@@ -31,32 +31,28 @@
   <header><h1>S0oxFlix</h1></header>
   <button class="back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
 
+  <!-- PUB DISCRÈTE EN HAUT -->
+  <div style="text-align:center; padding:10px; background:#2d1b3a; margin:10px auto; max-width:1200px; border-radius:10px;">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-3940256099942544"
+         data-ad-slot="1234567890"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div>
+
   <div class="container" id="content">
     <div class="loading"><i class="fas fa-spinner"></i><br>Chargement...</div>
-  </div>
-
-  <!-- POPUPS ADS -->
-  <div id="ad1" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:none;z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:var(--card);padding:40px;border-radius:20px;text-align:center;max-width:400px;">
-      <h3 style="color:var(--accent);margin-bottom:15px;">ATTENTION ADS!</h3>
-      <p style="color:#ccc;margin-bottom:25px;">Merci de ton soutien !</p>
-      <button onclick="showAd2()" style="background:var(--accent);color:white;padding:14px 30px;border:none;border-radius:50px;cursor:pointer;">Continuer</button>
-    </div>
-  </div>
-
-  <div id="ad2" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:none;z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:var(--card);padding:40px;border-radius:20px;text-align:center;max-width:400px;">
-      <h3 style="color:var(--accent);margin-bottom:15px;">Merci !</h3>
-      <p style="color:#ccc;margin-bottom:25px;">Le film démarre...</p>
-      <button onclick="startMovie()" style="background:var(--accent);color:white;padding:14px 30px;border:none;border-radius:50px;cursor:pointer;">Regarder</button>
-    </div>
   </div>
 
   <script>
     const API_KEY = '6c2b12d2fa62845b21cd9bb35c1959b0';
     const urlParams = new URLSearchParams(window.location.search);
     const movieId = urlParams.get('id');
-    let movieData = null;
 
     if (!movieId) {
       document.body.innerHTML = '<p style="text-align:center;color:#f66;padding:50px;">ID manquant</p>';
@@ -65,9 +61,8 @@
     async function loadMovie() {
       const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=fr-FR`);
       const m = await res.json();
-      movieData = m;
 
-      const embed = `https://multiembed.mov/?video_id=${movieId}&tmdb=1`;
+      const embed = `https://multiembed.mov/?video_id=${movieId}&tmdb=1&autoplay=1`;
 
       document.getElementById('content').innerHTML = `
         <img src="https://image.tmdb.org/t/p/w500${m.poster_path}" class="poster">
@@ -75,35 +70,15 @@
           <h1 class="title">${m.title}</h1>
           <div class="meta">⭐ ${m.vote_average?.toFixed(1)} | ${m.release_date?.split('-')[0] || 'N/A'}</div>
           <p class="synopsis">${m.overview || 'Aucun synopsis.'}</p>
-          <div class="player" style="position:relative;">
+          <div class="player">
             <div class="player-header">
               <span>Lecture : ${m.title}</span>
               <button onclick="document.querySelector('iframe').src=''" style="background:none;color:white;border:none;font-size:1.5rem;cursor:pointer;">×</button>
             </div>
-            <iframe src="" allowfullscreen allow="autoplay; fullscreen"></iframe>
+            <iframe src="${embed}" allowfullscreen allow="autoplay; fullscreen"></iframe>
           </div>
         </div>
       `;
-
-      // Démarre avec pubs
-      document.getElementById('ad1').style.display = 'flex';
-    }
-
-    function showAd2() {
-      document.getElementById('ad1').style.display = 'none';
-      const ad = document.createElement('script');
-      ad.src = '//pl27976969.effectivegatecpm.com/f1/f2/7c/f1f27c6bc9906eca8322aec126ded56b.js';
-      document.head.appendChild(ad);
-      setTimeout(() => {
-        document.head.removeChild(ad);
-        document.getElementById('ad2').style.display = 'flex';
-      }, 5000);
-    }
-
-    function startMovie() {
-      document.getElementById('ad2').style.display = 'none';
-      const iframe = document.querySelector('iframe');
-      iframe.src = `https://multiembed.mov/?video_id=${movieId}&tmdb=1&autoplay=1`;
     }
 
     loadMovie();
