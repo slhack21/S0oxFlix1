@@ -29,21 +29,7 @@
 <body>
 
   <header><h1>S0oxFlix</h1></header>
-  <button class="back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
-
-  <!-- PUB DISCRÈTE EN HAUT -->
-  <div style="text-align:center; padding:10px; background:#2d1b3a; margin:10px auto; max-width:1200px; border-radius:10px;">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-3940256099942544"
-         data-ad-slot="1234567890"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
-    <script>
-         (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
-  </div>
+  <button class="back" onclick="history.back()">Retour</button>
 
   <div class="container" id="content">
     <div class="loading"><i class="fas fa-spinner"></i><br>Chargement...</div>
@@ -73,7 +59,7 @@
           <div class="player">
             <div class="player-header">
               <span>Lecture : ${m.title}</span>
-              <button onclick="document.querySelector('iframe').src=''" style="background:none;color:white;border:none;font-size:1.5rem;cursor:pointer;">×</button>
+              <button onclick="document.querySelector('iframe').src=''" style="background:none;color:white;border:none;font-size:1.5rem;cursor:pointer;">X</button>
             </div>
             <iframe src="${embed}" allowfullscreen allow="autoplay; fullscreen"></iframe>
           </div>
