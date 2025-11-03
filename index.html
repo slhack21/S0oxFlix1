@@ -8,8 +8,7 @@
     :root { --bg:#0f0a1a; --card:#1a0d33; --accent:#6a1b9a; --text:#e0d0ff; }
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:var(--bg); color:var(--text); font-family:Arial; min-height:100vh; }
-    header { background:var(--accent); padding:20px; text-align:center; font-size:1.8rem; font-weight:bold; color:white; }
-    .ad-notice { background:#2d1b3a; color:#ccc; text-align:center; padding:8px; font-size:0.85rem; }
+    header { background:var(--accent); padding:20px; text-align:center; font-size:1.8rem; font-weight:bold; }
     .search-bar { padding:15px; text-align:center; }
     #search { width:90%; max-width:500px; padding:12px; background:var(--card); color:var(--text); border:none; border-radius:30px; font-size:1rem; }
     .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:15px; padding:20px; }
@@ -25,16 +24,18 @@
     .close-player { background:none; border:none; color:white; font-size:1.5rem; cursor:pointer; }
     iframe { width:100%; height:500px; border:none; display:none; }
     .player-loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#aaa; font-size:1rem; text-align:center; display:block; z-index:1; }
+    .popup { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; z-index:1000; align-items:center; justify-content:center; }
+    .popup.active { display:flex; }
+    .popup-content { background:var(--card); padding:30px; border-radius:16px; text-align:center; max-width:400px; }
+    .popup-content h3 { color:var(--accent); margin-bottom:10px; }
+    .popup-content p { margin-bottom:20px; color:#aaa; }
+    .popup-btn { background:var(--accent); color:white; padding:12px 24px; border:none; border-radius:50px; cursor:pointer; margin:5px; }
     @media (max-width:600px){ iframe{height:300px;} }
   </style>
 </head>
 <body>
 
   <header><h1>S0oxFlix</h1></header>
-
-  <div class="ad-notice">
-    Il y aura des pubs, désolé. Ferme juste la page de redirection et reviens ici 🙏
-  </div>
 
   <div class="search-bar">
     <input type="text" id="search" placeholder="Rechercher un film..." />
@@ -51,26 +52,40 @@
     <iframe id="player" allowfullscreen allow="autoplay; fullscreen; encrypted-media" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
   </div>
 
+  <!-- LES 2 POPUPS ADS (COMME AVANT) -->
+  <div class="popup" id="ad1">
+    <div class="popup-content">
+      <h3>ATTENTION ADS!</h3>
+      <p>Merci de ton soutien !</p>
+      <button class="popup-btn" onclick="showAd2()">Continuer</button>
+    </div>
+  </div>
+
+  <div class="popup" id="ad2">
+    <div class="popup-content">
+      <h3>Merci !</h3>
+      <p>Le film démarre...</p>
+      <button class="popup-btn" onclick="playFromAd()">Regarder</button>
+    </div>
+  </div>
+
   <script>
     let films = [];
     let currentFilm = null;
 
-    // CHARGEMENT AVEC ANTI-CACHE
-    fetch('films.json?v=' + Date.now())
+    fetch('films.json?t=' + Date.now())
       .then(r => r.json())
       .then(data => {
         films = data;
         render(films);
       })
-      .catch(err => {
-        console.error("Erreur JSON:", err);
-        document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Erreur : films.json introuvable</p>';
+      .catch(() => {
+        document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Erreur : films.json manquant</p>';
       });
 
     function render(list) {
       const grid = document.getElementById('films');
       grid.innerHTML = '';
-      if (!list || list.length === 0) return;
       list.forEach(f => {
         const card = document.createElement('div');
         card.className = 'card';
@@ -78,9 +93,28 @@
           <img src="${f.poster}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
           <div class="info"><h3>${f.title}</h3><p>${f.year}</p></div>
         `;
-        card.onclick = () => play(f);
+        card.onclick = () => {
+          currentFilm = f;
+          document.getElementById('ad1').classList.add('active');
+        };
         grid.appendChild(card);
       });
+    }
+
+    function showAd2() {
+      document.getElementById('ad1').classList.remove('active');
+      const ad = document.createElement('script');
+      ad.src = '//pl27976969.effectivegatecpm.com/f1/f2/7c/f1f27c6bc9906eca8322aec126ded56b.js';
+      document.head.appendChild(ad);
+      setTimeout(() => {
+        if (document.head.contains(ad)) document.head.removeChild(ad);
+        document.getElementById('ad2').classList.add('active');
+      }, 5000);
+    }
+
+    function playFromAd() {
+      document.getElementById('ad2').classList.remove('active');
+      play(currentFilm);
     }
 
     function play(f) {
@@ -91,19 +125,12 @@
       loading.style.display = 'block';
       iframe.style.display = 'none';
 
-      // FORCE RELOAD + ANTI-CACHE
-      iframe.src = f.embed + '?t=' + Date.now();
+      iframe.src = f.embed + '?t=' + Date.now(); // Anti-cache
 
       iframe.onload = () => {
         loading.style.display = 'none';
         iframe.style.display = 'block';
       };
-
-      // 1 PUB DISCRÈTE
-      const ad = document.createElement('script');
-      ad.src = '//pl27976969.effectivegatecpm.com/f1/f2/7c/f1f27c6bc9906eca8322aec126ded56b.js';
-      document.head.appendChild(ad);
-      setTimeout(() => document.head.removeChild(ad), 8000);
     }
 
     function closePlayer() {
@@ -111,7 +138,6 @@
       document.getElementById('player').src = '';
     }
 
-    // RECHERCHE
     document.getElementById('search').oninput = () => {
       const q = document.getElementById('search').value.toLowerCase().trim();
       const filtered = films.filter(f => f.title.toLowerCase().includes(q));
