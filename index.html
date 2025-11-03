@@ -32,9 +32,8 @@
 
   <header><h1>S0oxFlix</h1></header>
 
-  <!-- MESSAGE DISCRET -->
   <div class="ad-notice">
-    Il y aura des pubs, désolé. Ferme juste cette page et reviens ici 🙏
+    Il y aura des pubs, désolé. Ferme juste la page de redirection et reviens ici 🙏
   </div>
 
   <div class="search-bar">
@@ -56,19 +55,22 @@
     let films = [];
     let currentFilm = null;
 
-    fetch('films.json?t=' + Date.now())
+    // CHARGEMENT AVEC ANTI-CACHE
+    fetch('films.json?v=' + Date.now())
       .then(r => r.json())
       .then(data => {
         films = data;
         render(films);
       })
-      .catch(() => {
+      .catch(err => {
+        console.error("Erreur JSON:", err);
         document.getElementById('films').innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">Erreur : films.json introuvable</p>';
       });
 
     function render(list) {
       const grid = document.getElementById('films');
       grid.innerHTML = '';
+      if (!list || list.length === 0) return;
       list.forEach(f => {
         const card = document.createElement('div');
         card.className = 'card';
@@ -76,10 +78,7 @@
           <img src="${f.poster}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
           <div class="info"><h3>${f.title}</h3><p>${f.year}</p></div>
         `;
-        card.onclick = () => {
-          currentFilm = f;
-          play(f); // DIRECT PLAY, PAS DE POPUP
-        };
+        card.onclick = () => play(f);
         grid.appendChild(card);
       });
     }
@@ -92,17 +91,15 @@
       loading.style.display = 'block';
       iframe.style.display = 'none';
 
-      iframe.src = '';
-      setTimeout(() => {
-        iframe.src = f.embed;
-      }, 100);
+      // FORCE RELOAD + ANTI-CACHE
+      iframe.src = f.embed + '?t=' + Date.now();
 
       iframe.onload = () => {
         loading.style.display = 'none';
         iframe.style.display = 'block';
       };
 
-      // Pubs discrètes (1 seule, pas de popup)
+      // 1 PUB DISCRÈTE
       const ad = document.createElement('script');
       ad.src = '//pl27976969.effectivegatecpm.com/f1/f2/7c/f1f27c6bc9906eca8322aec126ded56b.js';
       document.head.appendChild(ad);
@@ -114,6 +111,7 @@
       document.getElementById('player').src = '';
     }
 
+    // RECHERCHE
     document.getElementById('search').oninput = () => {
       const q = document.getElementById('search').value.toLowerCase().trim();
       const filtered = films.filter(f => f.title.toLowerCase().includes(q));
