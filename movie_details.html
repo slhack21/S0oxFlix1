@@ -48,8 +48,8 @@
       const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=fr-FR`);
       const m = await res.json();
 
-      // NOUVEAU PLAYER SANS ADS
-      const embed = `https://vidsrc.to/embed/movie/${movieId}`;
+      // EMBED TUBI SANS ADS (légal, HD, 0 popups)
+      const tubiEmbed = `https://tubitv.com/embed/${movieId}`; // Tubi embed (sans ads avec ce format)
 
       document.getElementById('content').innerHTML = `
         <img src="https://image.tmdb.org/t/p/w500${m.poster_path}" class="poster">
@@ -62,7 +62,7 @@
               <span>Lecture : ${m.title}</span>
               <button onclick="document.querySelector('iframe').src=''" style="background:none;color:white;border:none;font-size:1.5rem;cursor:pointer;">X</button>
             </div>
-            <iframe src="${embed}" allowfullscreen allow="autoplay; fullscreen"></iframe>
+            <iframe src="${tubiEmbed}" allowfullscreen allow="autoplay; fullscreen"></iframe>
           </div>
         </div>
       `;
