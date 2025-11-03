@@ -8,8 +8,7 @@
     :root { --bg:#0f0a1a; --card:#1a0d33; --accent:#6a1b9a; --text:#e0d0ff; }
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:var(--bg); color:var(--text); font-family:Arial; min-height:100vh; }
-    header { background:var(--accent); padding:20px; text-align:center; font-size:1.8rem; font-weight:bold; position:sticky; top:0; z-index:100; }
-    .tap-target { cursor:pointer; }
+    header { background:var(--accent); padding:20px; text-align:center; font-size:1.8rem; font-weight:bold; }
     .search-bar { padding:15px; text-align:center; }
     #search { width:90%; max-width:500px; padding:12px; background:var(--card); color:var(--text); border:none; border-radius:30px; font-size:1rem; }
     .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:15px; padding:20px; }
@@ -37,7 +36,7 @@
 <body>
 
   <header>
-    <h1 id="titleTap">S0oxFlix</h1>
+    <h1>S0oxFlix</h1>
   </header>
 
   <div class="search-bar">
@@ -53,6 +52,7 @@
     </div>
     <div class="player-loading" id="loadingMsg">Chargement...<br><small>2-3s</small></div>
     <iframe id="player" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+  </ TCC>
   </div>
 
   <!-- Popup ADS 1 -->
@@ -74,22 +74,21 @@
   </div>
 
   <script>
-    // Bloqueur pubs VidSrc (enlève redirections inutiles)
-    window.addEventListener('load', () => {
-      const adScript = document.querySelector('script[src*="effectivegatecpm.com"]');
-      if (adScript) adScript.remove();
-      const oldOpen = window.open;
-      window.open = (url) => {
-        if (url.includes('effectivegatecpm.com') && !url.includes('your-ad-link')) return null; // Bloque sauf ta redirection
-        return oldOpen(url, '_blank'); // Ouvre en nouveau tab pour redirection
-      };
-    });
+    // TON SCRIPT AD (redirection)
+    function showAd2() {
+      document.getElementById('ad1').classList.remove('active');
+      const ad = document.createElement('script');
+      ad.src = '//pl27976969.effectivegatecpm.com/f1/f2/7c/f1f27c6bc9906eca8322aec126ded56b.js';
+      document.head.appendChild(ad);
+      setTimeout(() => {
+        document.head.removeChild(ad);
+        document.getElementById('ad2').classList.add('active');
+      }, 5000);
+    }
 
     let films = [];
     let currentFilm = null;
-    let taps = 0;
 
-    // Load films.json
     fetch('films.json?t=' + Date.now())
       .then(r => r.json())
       .then(data => { films = data; render(); })
@@ -102,27 +101,9 @@
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `<img src="${f.poster}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'"><div class="info"><h3>${f.title}</h3><p>${f.year}</p></div>`;
-        card.onclick = () => showAd1(f);
+        card.onclick = () => { currentFilm = f; document.getElementById('ad1').classList.add('active'); };
         grid.appendChild(card);
       });
-    }
-
-    function showAd1(f) {
-      currentFilm = f;
-      document.getElementById('ad1').classList.add('active');
-    }
-
-    function showAd2() {
-      document.getElementById('ad1').classList.remove('active');
-      // Charge ton script ad (redirection)
-      const adScript = document.createElement('script');
-      adScript.src = '//pl27976969.effectivegatecpm.com/f1/f2/7c/f1f27c6bc9906eca8322aec126ded56b.js';
-      document.head.appendChild(adScript);
-      // Retour après 5s (redirection s'ouvre en tab)
-      setTimeout(() => {
-        document.head.removeChild(adScript);
-        document.getElementById('ad2').classList.add('active');
-      }, 5000);
     }
 
     function playFromAd() {
@@ -146,20 +127,9 @@
       document.getElementById('player').src = '';
     }
 
-    // Recherche
     document.getElementById('search').oninput = () => {
       const q = document.getElementById('search').value.toLowerCase();
       render(films.filter(f => f.title.toLowerCase().includes(q)));
-    };
-
-    // Admin (3 taps)
-    document.getElementById('titleTap').onclick = () => {
-      taps++;
-      setTimeout(() => taps = 0, 1000);
-      if (taps === 3) {
-        taps = 0;
-        if (prompt('Mot de passe :') === 'S0ox2025') document.getElementById('adminPanel').classList.add('active');
-      }
     };
   </script>
 </body>
