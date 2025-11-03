@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin S0oxFlix</title>
+  <style>
+    :root { --bg:#0f0a1a; --card:#1a0d33; --accent:#6a1b9a; --text:#e0d0ff; }
+    body { background:var(--bg); color:var(--text); font-family:Arial; padding:20px; text-align:center; }
+    h1 { font-size:2rem; margin-bottom:10px; }
+    textarea { width:90%; max-width:700px; padding:12px; margin:10px auto; background:var(--card); color:var(--text); border:none; border-radius:8px; display:block; font-size:1rem; }
+    button { background:var(--accent); color:white; padding:14px 30px; border:none; border-radius:50px; cursor:pointer; font-size:1.1rem; margin:15px; }
+    .preview { margin:20px auto; padding:15px; background:var(--card); border-radius:12px; max-width:700px; display:none; flex-wrap:wrap; gap:15px; justify-content:center; }
+    .preview.active { display:flex; }
+    .preview img { max-width:160px; border-radius:8px; }
+    .info { text-align:left; flex:1; min-width:250px; }
+    .info h3 { margin:8px 0; font-size:1.2rem; }
+    .badge { display:inline-block; padding:4px 10px; background:#333; color:#0f0; border-radius:20px; font-size:0.8rem; }
+    #status { margin:15px; font-weight:bold; }
+    .loader { display:none; width:30px; height:30px; border:4px solid #333; border-top:4px solid var(--accent); border-radius:50%; animation:spin 1s linear infinite; margin:20px auto; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .success { color:#00ff88; }
+    .error { color:#ff3366; }
+  </style>
+</head>
+<body>
+  <h1>Panel Admin S0oxFlix</h1>
+  <p>Colle un ou plusieurs embeds VidSrc (un par ligne)</p>
+  <textarea id="embed" rows="5" placeholder="https://vidsrc-embed.ru/embed/movie?tmdb=634649"></textarea>
+  <button onclick="generateAndPush()">Publier sur le site</button>
+  <div class="loader"></div>
+  <div id="preview" class="preview"></div>
+  <div id="status"></div>
+
+  <script>
+    // TON NOUVEAU TOKEN (à remplacer)
+    const GITHUB_TOKEN = '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'; // ← METS TON NOUVEAU TOKEN ICI
+    const REPO = 'S0oxFlix1'; // Ton repo
+    const OWNER = 'slhack21'; // ← METS TON USERNAME ICI (ex: S0ox)
+
+    async function generateAndPush() {
+      const embedText = document.getElementById('embed').value.trim();
+      if (!embedText) return alert('Colle un embed !');
+
+      const lines = embedText.split('\n').map(l => l.trim()).filter(l => l);
+      const loader = document.querySelector('.loader');
+      const status = document.getElementById('status');
+      loader.style.display = 'block';
+      status.innerHTML = 'Récupération TMDB…';
+
+      const films = [];
+      for (const embed of lines) {
+        if (!embed.includes('vidsrc-embed.ru') || !embed.includes('tmdb=')) continue;
+        const tmdbId = embed.match(/tmdb=(\d+)/)?.[1];
+        if (!tmdbId) continue;
+        const isTV = embed.includes('/tv/');
+        try {
+          const type = isTV ? 'tv' : 'movie';
+          const res = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=15d2ea6d0dc1d476efbca3eba2b9bbfb&language=fr`);
+          const media = await res.json();
+          films.push({
+            id: tmdbId,
+            title: media.title || media.name,
+            year: (media.release_date || media.first_air_date)?.slice(0,4) || 'N/A',
+            poster: `https://image.tmdb.org/t/p/w500${media.poster_path}`,
+            overview: media.overview || 'Pas de description.',
+            embed: embed,
+            type: isTV ? 'tv' : 'movie'
+          });
+        } catch (e) {
+          status.innerHTML += `<p class="error">Erreur TMDB ${tmdbId}</p>`;
+        }
+      }
+
+      loader.style.display = 'none';
+      if (!films.length) return;
+
+      // Preview
+      const preview = document.getElementById('preview');
+      preview.classList.add('active');
+      preview.innerHTML = films.map(f => `
+        <div>
+          <img src="${f.poster}" onerror="this.src='https://via.placeholder.com/160?text=Poster'">
+          <div class="info">
+            <h3>${f.title} (${f.year})</h3>
+            <p>${f.overview.substring(0,120)}...</p>
+            <span class="badge">${f.type.toUpperCase()}</span>
+          </div>
+        </div>
+      `).join('');
+
+      // Push sur GitHub
+      status.innerHTML = 'Envoi sur GitHub…';
+      const content = btoa(JSON.stringify(films, null, 2));
+      try {
+        const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/films.json`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'Auto-update films.json',
+            content: content,
+            branch: 'main'
+          })
+        });
+
+        if (res.ok) {
+          status.innerHTML = `<p class="success">Site mis à jour ! Live en 10s.</p>`;
+        } else {
+          const err = await res.json();
+          status.innerHTML = `<p class="error">GitHub : ${err.message}</p>`;
+        }
+      } catch (e) {
+        status.innerHTML = `<p class="error">Erreur réseau</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
