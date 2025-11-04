@@ -7,23 +7,24 @@
   <style>
     :root {--bg:#0f0a1a;--p:#6a0dad;--a:#9d4edd;--t:#e0d4ff;--c:#1a1033;}
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{background:var(--bg);color:var(--t);font-family:Arial;}
+    body{background:var(--bg);color:var(--t);font-family:Arial;overflow-x:hidden;}
     header{background:var(--c);padding:1rem;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.5);}
     .logo{font-size:2rem;color:var(--a);font-weight:bold;text-align:center;}
     .search input{width:90%;max-width:600px;margin:1rem auto;display:block;padding:1rem;border-radius:50px;background:var(--bg);color:var(--t);border:1px solid var(--a);outline:none;}
     .search input::placeholder{color:#999;}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem;padding:1rem;}
-    .card{background:var(--c);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform 0.2s;box-shadow:0 4px 8px rgba(0,0,0,0.3);}
+    .card{background:var(--c);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform 0.2s ease;box-shadow:0 4px 8px rgba(0,0,0,0.3);}
     .card:hover{transform:scale(1.05);}
     .card img{width:100%;height:220px;object-fit:cover;}
     .card .title{padding:0.5rem;font-size:0.9rem;text-align:center;}
-    .player{display:none;width:100%;padding:2rem 1rem;background:linear-gradient(to bottom, var(--c), var(--bg));text-align:center;}
-    .player.active{display:block;}
-    .player iframe{width:100%;max-width:1200px;height:60vh;border:none;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.5);}
-    .back-btn{position:absolute;top:1rem;left:1rem;background:var(--p);color:#fff;border:none;padding:0.8rem 1.2rem;border-radius:25px;font-size:1rem;cursor:pointer;transition:background 0.2s;}
-    .back-btn:hover{background:var(--a);}
-    .no-grid{display:none;}
-    @media(max-width:768px){.grid{grid-template-columns:1fr 1fr;gap:0.5rem;padding:0.5rem;}.player{padding:1rem;}.player iframe{height:50vh;}.back-btn{top:0.5rem;left:0.5rem;padding:0.6rem 1rem;}}
+    .player{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:999;justify-content:center;align-items:center;padding:2rem;}
+    .player.active{display:flex;}
+    .player iframe{width:90%;max-width:1000px;height:70vh;border:none;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.5);background:#000;}
+    .close{position:absolute;top:20px;right:20px;background:var(--p);color:#fff;border:none;width:50px;height:50px;border-radius:50%;font-size:1.5rem;cursor:pointer;transition:background 0.2s;}
+    .close:hover{background:var(--a);}
+    .loader{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border:4px solid var(--c);border-top:4px solid var(--a);border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;}
+    @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+    @media(max-width:768px){.grid{grid-template-columns:1fr 1fr;gap:0.5rem;padding:0.5rem;}.player{padding:1rem;}.player iframe{width:100%;height:60vh;}}
   </style>
 </head>
 <body>
@@ -33,103 +34,105 @@
 <input type="text" placeholder="Rechercher..." oninput="search(this.value)" class="search">
 
 <div class="grid" id="grid">
-  <!-- Films réels inspirés de xalaflix.stream (2025) -->
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt32820897')">
+  <!-- Films avec embeds 2embed.cc (moins d'ads que vidsrc) -->
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt32820897" data-title="Demon Slayer: La Forteresse infinie">
     <img src="https://image.tmdb.org/t/p/w500/infinity-castle-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Demon+Slayer'">
     <div class="title">Demon Slayer: La Forteresse infinie</div>
   </div>
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt13069986')">
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt13069986" data-title="À contre-sens 3">
     <img src="https://image.tmdb.org/t/p/w500/after-we-fell-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=À+contre-sens+3'">
     <div class="title">À contre-sens 3</div>
   </div>
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt29644189')">
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt29644189" data-title="Black Phone 2">
     <img src="https://image.tmdb.org/t/p/w500/black-phone-2-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Black+Phone+2'">
     <div class="title">Black Phone 2</div>
   </div>
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt28291010')">
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt28291010" data-title="13 jours, 13 nuits">
     <img src="https://image.tmdb.org/t/p/w500/13-jours-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=13+jours'">
     <div class="title">13 jours, 13 nuits</div>
   </div>
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt13650700')">
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt13650700" data-title="A Big Bold Beautiful Journey">
     <img src="https://image.tmdb.org/t/p/w500/big-bold-journey-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=A+Big+Bold'">
     <div class="title">A Big Bold Beautiful Journey</div>
   </div>
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt22898462')">
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt22898462" data-title="Conjuring: L'Heure du jugement">
     <img src="https://image.tmdb.org/t/p/w500/conjuring-last-rites-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Conjuring'">
     <div class="title">Conjuring: L'Heure du jugement</div>
   </div>
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt0816692')">
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt0816692" data-title="Interstellar">
     <img src="https://image.tmdb.org/t/p/w500/interstellar-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Interstellar'">
     <div class="title">Interstellar</div>
   </div>
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt24046542')">
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt24046542" data-title="Chien 51">
     <img src="https://via.placeholder.com/150x220?text=Chien+51">
     <div class="title">Chien 51</div>
   </div>
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt1517268')">
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt1517268" data-title="Scooby-Doo et Krypto!">
     <img src="https://image.tmdb.org/t/p/w500/scooby-doo-krypto-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Scooby'">
     <div class="title">Scooby-Doo et Krypto!</div>
   </div>
-  <!-- Ajouts supplémentaires (exemples 2025) -->
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt26344498')">
+  <!-- Ajouts 2025 -->
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt26344498" data-title="Superman (2025)">
     <img src="https://via.placeholder.com/150x220?text=Superman">
     <div class="title">Superman (2025)</div>
   </div>
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt0499097')">
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt0499097" data-title="Avatar 3: Fire and Ash">
     <img src="https://image.tmdb.org/t/p/w500/avatar-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Avatar+3'">
     <div class="title">Avatar 3: Fire and Ash</div>
   </div>
-  <div class="card" onclick="play('https://vidsrc.to/embed/movie/tt15353992')">
+  <div class="card" data-url="https://www.2embed.cc/embed/movie/tt15353992" data-title="Mickey 17">
     <img src="https://via.placeholder.com/150x220?text=Mickey+17">
     <div class="title">Mickey 17</div>
   </div>
-  <!-- Ajoute d'autres avec IMDB ID via imdb.com -->
 </div>
 
 <div class="player" id="player">
-  <button class="back-btn" onclick="closePlayer()">← Retour</button>
-  <h2 id="current-title" style="margin-bottom:1rem;color:var(--a);">Chargement...</h2>
-  <iframe id="frame"></iframe>
+  <button class="close" onclick="closePlayer()">×</button>
+  <div class="loader" id="loader"></div>
+  <iframe id="frame" sandbox="allow-scripts allow-same-origin allow-presentation" loading="lazy"></iframe>
 </div>
 
 <script>
-  let currentTitle = '';
-  function play(url, title = '') {
-    currentTitle = title;
-    document.getElementById('current-title').textContent = title || 'Vidéo en cours...';
-    document.getElementById('frame').src = url;
-    document.getElementById('grid').style.display = 'none';
-    document.getElementById('player').classList.add('active');
-    document.body.style.overflow = 'hidden'; // Évite scroll pendant lecture
+  function play(url, title) {
+    const player = document.getElementById('player');
+    const frame = document.getElementById('frame');
+    const loader = document.getElementById('loader');
+    frame.src = url;
+    loader.style.display = 'block';
+    frame.onload = () => { loader.style.display = 'none'; };
+    player.classList.add('active');
+    document.body.style.overflow = 'hidden';
   }
   function closePlayer() {
-    document.getElementById('player').classList.remove('active');
-    document.getElementById('grid').style.display = 'grid';
-    document.getElementById('frame').src = '';
+    const player = document.getElementById('player');
+    const frame = document.getElementById('frame');
+    const loader = document.getElementById('loader');
+    player.classList.remove('active');
+    frame.src = '';
+    loader.style.display = 'none';
     document.body.style.overflow = 'auto';
-    // Réaffiche les cards cachées par recherche
+    // Reset search
     document.querySelectorAll('.card').forEach(c => c.style.display = 'block');
   }
   function search(q) {
-    let cards = document.querySelectorAll('.card');
+    const cards = document.querySelectorAll('.card');
     cards.forEach(c => {
-      let title = c.querySelector('.title').textContent.toLowerCase();
+      const title = c.querySelector('.title').textContent.toLowerCase();
       c.style.display = title.includes(q.toLowerCase()) ? 'block' : 'none';
     });
-    // Si player actif, ne touche pas
-    if (!document.getElementById('player').classList.contains('active')) {
-      // Cache les cards non match si q pas vide
-      if (q) cards.forEach(c => { if (!c.style.display || c.style.display === 'none') c.classList.add('no-grid'); });
-    }
   }
-  // Écoute pour clics sur cards avec titre
+  // Event listeners pour clics
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.card').forEach(card => {
       card.addEventListener('click', () => {
-        const title = card.querySelector('.title').textContent;
-        const url = card.getAttribute('onclick').match(/'([^']+)'/)[1];
+        const url = card.dataset.url;
+        const title = card.dataset.title;
         play(url, title);
       });
+    });
+    // Close on ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePlayer();
     });
   });
 </script>
