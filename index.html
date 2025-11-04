@@ -23,8 +23,9 @@
     .close{position:absolute;top:20px;right:20px;background:var(--p);color:#fff;border:none;width:50px;height:50px;border-radius:50%;font-size:1.5rem;cursor:pointer;transition:background 0.2s;}
     .close:hover{background:var(--a);}
     .loader{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border:4px solid var(--c);border-top:4px solid var(--a);border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;}
+    .error-msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#ff6b6b;text-align:center;font-size:1.1rem;}
     @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-    @media(max-width:768px){.grid{grid-template-columns:1fr 1fr;gap:0.5rem;padding:0.5rem;}.player{padding:1rem;}.player iframe{width:100%;height:60vh;}}
+    @media(max-width:768px){.grid{grid-template-columns:1fr 1fr;gap:0.5rem;padding:0.5rem;}.player iframe{width:100%;height:60vh;}}
   </style>
 </head>
 <body>
@@ -34,85 +35,88 @@
 <input type="text" placeholder="Rechercher..." oninput="search(this.value)" class="search">
 
 <div class="grid" id="grid">
-  <!-- Films avec vidsrc.pro (pas de blocage sandbox) -->
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt32820897" data-title="Demon Slayer: La Forteresse infinie">
+  <!-- Films avec IMDB ID -->
+  <div class="card" data-imdb="tt32820897" data-title="Demon Slayer: La Forteresse infinie">
     <img src="https://image.tmdb.org/t/p/w500/infinity-castle-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Demon+Slayer'">
     <div class="title">Demon Slayer: La Forteresse infinie</div>
   </div>
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt13069986" data-title="À contre-sens 3">
+  <div class="card" data-imdb="tt13069986" data-title="À contre-sens 3">
     <img src="https://image.tmdb.org/t/p/w500/after-we-fell-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=À+contre-sens+3'">
     <div class="title">À contre-sens 3</div>
   </div>
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt29644189" data-title="Black Phone 2">
+  <div class="card" data-imdb="tt29644189" data-title="Black Phone 2">
     <img src="https://image.tmdb.org/t/p/w500/black-phone-2-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Black+Phone+2'">
     <div class="title">Black Phone 2</div>
   </div>
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt28291010" data-title="13 jours, 13 nuits">
-    <img src="https://image.tmdb.org/t/p/w500/13-jours-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=13+jours'">
-    <div class="title">13 jours, 13 nuits</div>
-  </div>
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt13650700" data-title="A Big Bold Beautiful Journey">
-    <img src="https://image.tmdb.org/t/p/w500/big-bold-journey-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=A+Big+Bold'">
-    <div class="title">A Big Bold Beautiful Journey</div>
-  </div>
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt22898462" data-title="Conjuring: L'Heure du jugement">
-    <img src="https://image.tmdb.org/t/p/w500/conjuring-last-rites-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Conjuring'">
-    <div class="title">Conjuring: L'Heure du jugement</div>
-  </div>
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt0816692" data-title="Interstellar">
+  <div class="card" data-imdb="tt0816692" data-title="Interstellar">
     <img src="https://image.tmdb.org/t/p/w500/interstellar-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Interstellar'">
     <div class="title">Interstellar</div>
   </div>
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt24046542" data-title="Chien 51">
-    <img src="https://via.placeholder.com/150x220?text=Chien+51">
-    <div class="title">Chien 51</div>
-  </div>
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt1517268" data-title="Scooby-Doo et Krypto!">
-    <img src="https://image.tmdb.org/t/p/w500/scooby-doo-krypto-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Scooby'">
-    <div class="title">Scooby-Doo et Krypto!</div>
-  </div>
-  <!-- Plus de films 2025 -->
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt26344498" data-title="Superman (2025)">
-    <img src="https://via.placeholder.com/150x220?text=Superman">
-    <div class="title">Superman (2025)</div>
-  </div>
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt0499097" data-title="Avatar 3: Fire and Ash">
-    <img src="https://image.tmdb.org/t/p/w500/avatar-poster.jpg" onerror="this.src='https://via.placeholder.com/150x220?text=Avatar+3'">
-    <div class="title">Avatar 3: Fire and Ash</div>
-  </div>
-  <div class="card" data-url="https://vidsrc.pro/embed/movie/tt15353992" data-title="Mickey 17">
-    <img src="https://via.placeholder.com/150x220?text=Mickey+17">
-    <div class="title">Mickey 17</div>
-  </div>
+  <!-- Ajoute d'autres ici -->
 </div>
 
 <div class="player" id="player">
-  <button class="close" onclick="closePlayer()">×</button>
+  <button class="close" onclick="closePlayer()">X</button>
   <div class="loader" id="loader"></div>
+  <div class="error-msg" id="error-msg" style="display:none;">Lecture impossible. Essayez avec uBlock désactivé ou changez de réseau.</div>
   <iframe id="frame" loading="lazy"></iframe>
 </div>
 
 <script>
-  function play(url, title) {
+  const providers = [
+    imdb => `https://corsproxy.io/?https://vidsrc.to/embed/movie/${imdb}`,
+    imdb => `https://corsproxy.io/?https://vidsrc.me/embed/movie?tmdb=${imdb}`,
+    imdb => `https://corsproxy.io/?https://www.2embed.cc/embed/movie/${imdb}`
+  ];
+
+  function play(imdb, title) {
     const player = document.getElementById('player');
     const frame = document.getElementById('frame');
     const loader = document.getElementById('loader');
-    frame.src = url;
-    loader.style.display = 'block';
-    frame.onload = () => { loader.style.display = 'none'; };
+    const errorMsg = document.getElementById('error-msg');
+    let index = 0;
+    let timeout;
+
+    function tryProvider() {
+      if (index >= providers.length) {
+        loader.style.display = 'none';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      const url = providers[index](imdb);
+      frame.src = url;
+      loader.style.display = 'block';
+      errorMsg.style.display = 'none';
+
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        console.log(`Provider ${index + 1} timeout → next`);
+        index++;
+        tryProvider();
+      }, 8000);
+
+      frame.onload = () => {
+        clearTimeout(timeout);
+        loader.style.display = 'none';
+        console.log(`Provider ${index + 1} OK`);
+      };
+    }
+
     player.classList.add('active');
     document.body.style.overflow = 'hidden';
+    tryProvider();
   }
+
   function closePlayer() {
     const player = document.getElementById('player');
     const frame = document.getElementById('frame');
-    const loader = document.getElementById('loader');
     player.classList.remove('active');
     frame.src = '';
-    loader.style.display = 'none';
     document.body.style.overflow = 'auto';
     document.querySelectorAll('.card').forEach(c => c.style.display = 'block');
   }
+
   function search(q) {
     const cards = document.querySelectorAll('.card');
     cards.forEach(c => {
@@ -120,15 +124,16 @@
       c.style.display = title.includes(q.toLowerCase()) ? 'block' : 'none';
     });
   }
+
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.card').forEach(card => {
       card.addEventListener('click', () => {
-        const url = card.dataset.url;
+        const imdb = card.dataset.imdb;
         const title = card.dataset.title;
-        play(url, title);
+        play(imdb, title);
       });
     });
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', e => {
       if (e.key === 'Escape') closePlayer();
     });
   });
