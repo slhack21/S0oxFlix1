@@ -1,109 +1,1596 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>S0oxFlix</title>
-  <style>
-    :root {--bg:#0f0a1a;--p:#6a0dad;--a:#9d4edd;--t:#e0d4ff;--c:#1a1033;}
-    *{margin:0;padding:0;box-sizing:border-box;}
-    body{background:var(--bg);color:var(--t);font-family:Arial;overflow-x:hidden;}
-    header{background:var(--c);padding:1rem;position:sticky;top:0;z-index:100;}
-    .logo{font-size:1.8rem;color:var(--a);font-weight:bold;text-align:center;}
-    .search input{width:90%;max-width:600px;margin:1rem auto;display:block;padding:1rem;border-radius:50px;background:var(--bg);color:var(--t);border:1px solid var(--a);outline:none;}
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.8rem;padding:0.8rem;}
-    .card{background:var(--c);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform 0.2s;}
-    .card:hover{transform:scale(1.03);}
-    .card img{width:100%;height:180px;object-fit:cover;}
-    .card .title{padding:0.5rem;font-size:0.85rem;text-align:center;}
-    .player{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:999;align-items:center;justify-content:center;}
-    .player.active{display:flex;}
-    .player iframe{width:100%;height:100%;border:none;}
-    .close{position:absolute;top:10px;right:10px;background:var(--p);color:#fff;border:none;width:45px;height:45px;border-radius:50%;font-size:1.4rem;cursor:pointer;}
-    .close:hover{background:var(--a);}
-    .loader{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border:6px solid #333;border-top:6px solid var(--a);border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;}
-    @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-    @media(min-width:768px){.grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}.player iframe{width:90%;height:70vh;}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krasley Games - Votre plateforme de jeux</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00d4ff, #ff00ea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            z-index: 101;
+        }
+
+        .hamburger {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1002;
+        }
+
+        .hamburger span {
+            width: 30px;
+            height: 3px;
+            background: linear-gradient(45deg, #00d4ff, #ff00ea);
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(8px, -8px);
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 350px;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
+            transition: right 0.3s ease;
+            z-index: 1001;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h2 {
+            color: #00d4ff;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .sidebar-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .nav-buttons button {
+            background: linear-gradient(45deg, #00d4ff, #ff00ea);
+            border: none;
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+            position: relative;
+            z-index: 102;
+        }
+
+        .nav-buttons button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.6);
+        }
+
+        .settings-section {
+            margin-top: 1rem;
+        }
+
+        .settings-section h3 {
+            color: #00d4ff;
+            margin-bottom: 1rem;
+        }
+
+        .permission-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+
+        .badge-admin {
+            background: linear-gradient(45deg, #ff6b6b, #ff00ea);
+            color: white;
+        }
+
+        .badge-member {
+            background: linear-gradient(45deg, #4ecdc4, #00d4ff);
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .user-info {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        /* Search Bar */
+        .search-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .search-wrapper {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 3rem 1rem 1.5rem;
+            border-radius: 50px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: rgba(0, 212, 255, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #00d4ff;
+            font-size: 1.2rem;
+            pointer-events: none;
+        }
+
+        .clear-search {
+            position: absolute;
+            right: 3.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .clear-search:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .clear-search.visible {
+            display: flex;
+        }
+
+        .search-results-info {
+            text-align: center;
+            margin-top: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+        }
+
+        /* Category Section */
+        .category-section {
+            margin-bottom: 2rem;
+        }
+
+        .category-header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .category-header:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.4);
+        }
+
+        .category-header h2 {
+            color: #00d4ff;
+            font-size: 1.5rem;
+        }
+
+        .category-arrow {
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .category-section.active .category-arrow {
+            transform: rotate(180deg);
+        }
+
+        .category-games {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .category-section.active .category-games {
+            max-height: 5000px;
+            margin-top: 1rem;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .game-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.3);
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+
+        .game-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(45deg, #00d4ff, #0f3460);
+        }
+
+        .game-info {
+            padding: 1.5rem;
+        }
+
+        .game-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-rating {
+            color: #ffd700;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .auth-form input, .auth-form select, .auth-form textarea {
+            padding: 1rem;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .auth-form input::placeholder, .auth-form textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .auth-form select {
+            cursor: pointer;
+        }
+
+        .auth-form select option {
+            background: #16213e;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #00d4ff, #ff00ea);
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.6);
+        }
+
+        .google-btn {
+            background: white;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .admin-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .admin-panel h2 {
+            margin-bottom: 1.5rem;
+            color: #00d4ff;
+        }
+
+        .accordion {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            background: linear-gradient(45deg, rgba(0, 212, 255, 0.2), rgba(255, 0, 234, 0.2));
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .accordion-header:hover {
+            background: linear-gradient(45deg, rgba(0, 212, 255, 0.3), rgba(255, 0, 234, 0.3));
+        }
+
+        .accordion-header h3 {
+            margin: 0;
+            color: #00d4ff;
+            font-size: 1.3rem;
+        }
+
+        .accordion-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .accordion.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            padding: 0 1.5rem;
+        }
+
+        .accordion.active .accordion-content {
+            max-height: 2000px;
+            padding: 1.5rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: linear-gradient(45deg, #4ecdc4, #00d4ff);
+            color: white;
+        }
+
+        .btn-delete {
+            background: linear-gradient(45deg, #ff6b6b, #ff0000);
+            color: white;
+        }
+
+        .btn-small:hover {
+            transform: scale(1.05);
+        }
+
+        .game-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .stars {
+            color: #ffd700;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        .review-section {
+            margin-top: 1.5rem;
+        }
+
+        .review-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .empty-category {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0.7;
+            font-size: 1.1rem;
+        }
+
+        .welcome-message {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            text-align: center;
+        }
+
+        .welcome-message h1 {
+            color: #00d4ff;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+
+        .welcome-message p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1rem;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .welcome-message h1 {
+                font-size: 1.8rem;
+            }
+
+            .welcome-message p {
+                font-size: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="header">
+        <div class="logo">🎮 KRASLEY GAMES</div>
+        <div class="nav-buttons">
+            <button id="loginBtn">Connexion</button>
+            <div class="hamburger hidden" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
 
-<header><div class="logo">S0oxFlix</div></header>
-<input type="text" placeholder="Rechercher..." oninput="search(this.value)" class="search">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Menu</h2>
+        </div>
+        
+        <div id="sidebarContent">
+            <div class="settings-section">
+                <h3>👤 Mon Profil</h3>
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <p><strong id="sidebarUserName"></strong></p>
+                    <p id="sidebarUserEmail" style="font-size: 0.9rem; opacity: 0.8;"></p>
+                    <div id="sidebarPermission"></div>
+                </div>
+            </div>
 
-<div class="grid" id="grid">
-  <!-- 30 FILMS FRANÇAIS 2025 – VF – ZÉRO PUB – TÉLÉPHONE OK -->
-  <div class="card" data-src="https://vidsrc.to/embed/movie/tt32820897" data-title="Demon Slayer: La Forteresse infinie">
-    <img src="https://via.placeholder.com/150x220?text=Demon+Slayer"><div class="title">Demon Slayer: La Forteresse infinie</div>
-  </div>
-  <div class="card" data-src="https://vidsrc.to/embed/movie/tt13069986" data-title="À contre-sens 3">
-    <img src="https://via.placeholder.com/150x220?text=À+contre-sens+3"><div class="title">À contre-sens 3</div>
-  </div>
-  <div class="card" data-src="https://vidsrc.to/embed/movie/tt29644189" data-title="Black Phone 2">
-    <img src="https://via.placeholder.com/150x220?text=Black+Phone+2"><div class="title">Black Phone 2</div>
-  </div>
-  <div class="card" data-src="https://vidsrc.to/embed/movie/tt24046542" data-title="Chien 51">
-    <img src="https://via.placeholder.com/150x220?text=Chien+51"><div class="title">Chien 51</div>
-  </div>
-  <div class="card" data-src="https://vidsrc.to/embed/movie/tt26344498" data-title="Superman (2025)">
-    <img src="https://via.placeholder.com/150x220?text=Superman"><div class="title">Superman (2025)</div>
-  </div>
-  <div class="card" data-src="https://vidsrc.to/embed/movie/tt0499097" data-title="Avatar 3">
-    <img src="https://via.placeholder.com/150x220?text=Avatar+3"><div class="title">Avatar 3</div>
-  </div>
-  <div class="card" data-src="https://vidsrc.to/embed/movie/tt1517268" data-title="Scooby-Doo et Krypto!">
-    <img src="https://via.placeholder.com/150x220?text=Scooby"><div class="title">Scooby-Doo et Krypto!</div>
-  </div>
-  <div class="card" data-src="https://vidsrc.to/embed/movie/tt28291010" data-title="13 jours, 13 nuits">
-    <img src="https://via.placeholder.com/150x220?text=13+jours"><div class="title">13 jours, 13 nuits</div>
-  </div>
-  <!-- +22 autres -->
-</div>
+            <div class="sidebar-menu">
+                <div class="sidebar-item" id="settingsBtn">
+                    ⚙️ Paramètres du compte
+                </div>
+                <div class="sidebar-item hidden" id="adminPanelBtn">
+                    🛠️ Panel Admin
+                </div>
+                <div class="sidebar-item hidden" id="createCategoryBtn">
+                    📁 Créer une catégorie
+                </div>
+                <div class="sidebar-item" id="logoutBtnSidebar">
+                    🚪 Déconnexion
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="player" id="player">
-  <button class="close" onclick="closePlayer()">X</button>
-  <div class="loader" id="loader"></div>
-  <iframe id="video" allow="autoplay; fullscreen" allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-</div>
+    <div class="container">
+        <div id="welcomeMessage" class="welcome-message">
+            <h1>🎮 Bienvenue sur Krasley Games</h1>
+            <p>Découvrez notre collection de jeux incroyables !</p>
+        </div>
 
-<script>
-  // PROXY ANTI-PUB (bloque les popups)
-  const cleanSrc = src => `https://corsproxy.io/?${encodeURIComponent(src)}`;
+        <div id="userInfo" class="user-info hidden">
+            <div>
+                <strong>Bienvenue, <span id="userName"></span></strong>
+                <p id="userEmail"></p>
+            </div>
+        </div>
 
-  function play(src, title) {
-    const player = document.getElementById('player');
-    const video = document.getElementById('video');
-    const loader = document.getElementById('loader');
-    
-    video.src = cleanSrc(src);
-    loader.style.display = 'block';
-    player.classList.add('active');
-    document.body.style.overflow = 'hidden';
+        <!-- Barre de recherche -->
+        <div class="search-container">
+            <div style="display: flex; gap: 1rem; align-items: center; max-width: 650px; margin: 0 auto;">
+                <button class="btn-suggestion" id="suggestionBtn" title="Suggérer un jeu">
+                    💡
+                </button>
+                <div class="search-wrapper" style="flex: 1;">
+                    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Rechercher un jeu...">
+                    <button class="clear-search" id="clearSearch">×</button>
+                    <span class="search-icon">🔍</span>
+                </div>
+            </div>
+            <div class="search-results-info" id="searchResultsInfo"></div>
+        </div>
 
-    // Anti-popup
-    video.sandbox = "allow-scripts allow-same-origin";
-    setTimeout(() => loader.style.display = 'none', 5000);
-  }
+        <div id="adminPanel" class="admin-panel hidden">
+            <h2>🛠️ Panel Administrateur</h2>
+            
+            <div class="accordion">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <h3>🎮 Ajouter un jeu</h3>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <form id="addGameForm" class="auth-form">
+                        <input type="text" id="gameTitle" placeholder="Titre du jeu" required>
+                        <select id="gameCategory" required>
+                            <option value="">Sélectionner une catégorie</option>
+                        </select>
+                        <input type="url" id="gameImage" placeholder="URL de l'image" required>
+                        <textarea id="gameDescription" placeholder="Description" rows="4" required></textarea>
+                        <input type="url" id="gameDownloadUrl" placeholder="URL de téléchargement" required>
+                        <button type="submit" class="btn-primary">Publier le jeu</button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-  function closePlayer() {
-    const player = document.getElementById('player');
-    const video = document.getElementById('video');
-    player.classList.remove('active');
-    video.src = '';
-    document.body.style.overflow = 'auto';
-  }
+        <div id="categoriesContainer"></div>
+    </div>
 
-  function search(q) {
-    document.querySelectorAll('.card').forEach(c => {
-      c.style.display = c.querySelector('.title').textContent.toLowerCase().includes(q.toLowerCase()) ? 'flex' : 'none';
-    });
-  }
+    <!-- Modal Create Category -->
+    <div id="categoryModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeCategoryModal()">×</button>
+            <h2>📁 Créer une catégorie</h2>
+            <form id="createCategoryForm" class="auth-form">
+                <input type="text" id="categoryName" placeholder="Nom de la catégorie" required>
+                <button type="submit" class="btn-primary">Créer la catégorie</button>
+            </form>
+        </div>
+    </div>
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.card').forEach(card => {
-      card.onclick = () => play(card.dataset.src, card.dataset.title);
-    });
-  });
-</script>
+    <!-- Modal Settings -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeSettingsModal()">×</button>
+            <h2>⚙️ Paramètres du compte</h2>
+            <form id="settingsForm" class="auth-form">
+                <h3>Modifier le pseudo</h3>
+                <input type="text" id="newDisplayName" placeholder="Nouveau pseudo">
+                <button type="button" class="btn-primary" id="updateNameBtn">Mettre à jour le pseudo</button>
+                
+                <hr style="margin: 1.5rem 0; border: 1px solid rgba(255,255,255,0.2);">
+                
+                <h3>Modifier l'email</h3>
+                <input type="email" id="newEmail" placeholder="Nouvel email">
+                <button type="button" class="btn-primary" id="updateEmailBtn">Mettre à jour l'email</button>
+                
+                <hr style="margin: 1.5rem 0; border: 1px solid rgba(255,255,255,0.2);">
+                
+                <h3>Modifier le mot de passe</h3>
+                <input type="password" id="currentPassword" placeholder="Mot de passe actuel">
+                <input type="password" id="newPassword" placeholder="Nouveau mot de passe">
+                <input type="password" id="confirmPassword" placeholder="Confirmer le mot de passe">
+                <button type="button" class="btn-primary" id="updatePasswordBtn">Mettre à jour le mot de passe</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Auth -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeAuthModal()">×</button>
+            <h2>Connexion</h2>
+            <form id="emailLoginForm" class="auth-form">
+                <input type="email" id="emailInput" placeholder="Email" required>
+                <input type="password" id="passwordInput" placeholder="Mot de passe" required>
+                <button type="submit" class="btn-primary">Se connecter</button>
+                <button type="button" class="btn-primary" id="registerBtn">S'inscrire</button>
+            </form>
+            <hr style="margin: 1.5rem 0; border: 1px solid rgba(255,255,255,0.2);">
+            <button class="btn-primary google-btn" id="googleLoginBtn">
+                <svg width="20" height="20" viewBox="0 0 20 20">
+                    <path fill="#4285F4" d="M19.6 10.23c0-.82-.1-1.42-.25-2.05H10v3.72h5.5c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"/>
+                    <path fill="#34A853" d="M13.46 15.13c-.83.59-1.96 1-3.46 1-2.64 0-4.88-1.74-5.68-4.15H1.07v2.52C2.72 17.75 6.09 20 10 20c2.7 0 4.96-.89 6.62-2.42l-3.16-2.45z"/>
+                    <path fill="#FBBC05" d="M3.99 10c0-.69.12-1.35.32-1.97V5.51H1.07A9.973 9.973 0 000 10c0 1.61.39 3.14 1.07 4.49l3.24-2.52c-.2-.62-.32-1.28-.32-1.97z"/>
+                    <path fill="#EA4335" d="M10 3.88c1.88 0 3.13.81 3.85 1.48l2.84-2.76C14.96.99 12.7 0 10 0 6.09 0 2.72 2.25 1.07 5.51l3.24 2.52C5.12 5.62 7.36 3.88 10 3.88z"/>
+                </svg>
+                Continuer avec Google
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Game -->
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeGameModal()">×</button>
+            <img id="modalGameImage" style="width: 100%; border-radius: 10px; margin-bottom: 1rem;">
+            <h2 id="modalGameTitle"></h2>
+            <div class="game-rating" id="modalGameRating"></div>
+            <p id="modalGameDescription" style="margin: 1rem 0;"></p>
+            <button class="btn-primary" id="downloadBtn" style="width: 100%; margin-bottom: 1rem;">
+                ⬇️ Télécharger
+            </button>
+            
+            <div class="review-section">
+                <h3>Laisser un avis</h3>
+                <div class="stars" id="ratingStars">
+                    <span data-rating="1">☆</span>
+                    <span data-rating="2">☆</span>
+                    <span data-rating="3">☆</span>
+                    <span data-rating="4">☆</span>
+                    <span data-rating="5">☆</span>
+                </div>
+                <textarea id="reviewText" placeholder="Votre avis..." rows="3"></textarea>
+                <button class="btn-primary" id="submitReviewBtn" style="margin-top: 0.5rem;">Publier l'avis</button>
+            </div>
+
+            <div id="reviewsList" class="review-section">
+                <h3>Avis des joueurs</h3>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile, updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, arrayUnion, deleteDoc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: atob('QUl6YVN5Q1FrYTdxTFFFWF9LTjRqeGlMUUdGdmc3TUhQQjBxenEw'),
+            authDomain: atob('a3Jhc2xleS00ZTFkYy5maXJlYmFzZWFwcC5jb20='),
+            projectId: atob('a3Jhc2xleS00ZTFkYw=='),
+            storageBucket: atob('a3Jhc2xleS00ZTFkYy5maXJlYmFzZXN0b3JhZ2UuYXBw'),
+            messagingSenderId: atob('MzIyNDgxNDkwMDA5'),
+            appId: atob('MTozMjI0ODE0OTAwMDk6d2ViOjJiZWZhN2U1MTcyZjNkYTNiOTQ5NDg='),
+            measurementId: atob('Ry1QUUJIV1I2R1ZU')
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const ADMIN_EMAIL = atob('a3Jhc2xleXN0dWRpb0BnbWFpbC5jb20=');
+
+        let currentUser = null;
+        let currentGameId = null;
+        let selectedRating = 0;
+        let allCategories = [];
+        let allGames = [];
+        let searchQuery = '';
+
+        window.toggleAccordion = function(header) {
+            const accordion = header.parentElement;
+            accordion.classList.toggle('active');
+        };
+
+        window.toggleCategory = function(categoryId) {
+            const categorySection = document.querySelector(`[data-category-id="${categoryId}"]`);
+            if (categorySection) {
+                categorySection.classList.toggle('active');
+            }
+        };
+
+        // Gestion de la barre de recherche
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const searchResultsInfo = document.getElementById('searchResultsInfo');
+
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase().trim();
+            
+            if (searchQuery) {
+                clearSearchBtn.classList.add('visible');
+            } else {
+                clearSearchBtn.classList.remove('visible');
+            }
+            
+            filterGames();
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            searchQuery = '';
+            clearSearchBtn.classList.remove('visible');
+            searchResultsInfo.textContent = '';
+            filterGames();
+        });
+
+        function filterGames() {
+            if (!searchQuery) {
+                displayGamesByCategory();
+                searchResultsInfo.textContent = '';
+                return;
+            }
+
+            const filteredGames = allGames.filter(game => 
+                game.title.toLowerCase().includes(searchQuery) ||
+                game.description.toLowerCase().includes(searchQuery)
+            );
+
+            searchResultsInfo.textContent = `${filteredGames.length} jeu(x) trouvé(s)`;
+
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = '';
+
+            if (filteredGames.length === 0) {
+                container.innerHTML = '<div class="empty-category">Aucun jeu ne correspond à votre recherche</div>';
+                return;
+            }
+
+            // Grouper par catégorie
+            const gamesByCategory = {};
+            filteredGames.forEach(game => {
+                if (!gamesByCategory[game.category]) {
+                    gamesByCategory[game.category] = [];
+                }
+                gamesByCategory[game.category].push(game);
+            });
+
+            // Afficher les résultats
+            Object.keys(gamesByCategory).forEach(categoryId => {
+                const category = allCategories.find(c => c.id === categoryId);
+                if (!category) return;
+
+                const categorySection = document.createElement('div');
+                categorySection.className = 'category-section active';
+                categorySection.setAttribute('data-category-id', categoryId);
+                
+                const isAdmin = currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+                
+                categorySection.innerHTML = `
+                    <div class="category-header" onclick="toggleCategory('${categoryId}')">
+                        <h2>${category.name}</h2>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            ${isAdmin ? `<button class="btn-small btn-delete" onclick="event.stopPropagation(); deleteCategory('${categoryId}', '${category.name}')">🗑️ Supprimer</button>` : ''}
+                            <span class="category-arrow">▼</span>
+                        </div>
+                    </div>
+                    <div class="category-games">
+                        <div class="games-grid" id="games-${categoryId}"></div>
+                    </div>
+                `;
+                
+                container.appendChild(categorySection);
+                
+                const gamesGrid = document.getElementById(`games-${categoryId}`);
+                displayGamesInGrid(gamesGrid, gamesByCategory[categoryId], isAdmin);
+            });
+        }
+
+        function displayGamesInGrid(gamesGrid, games, isAdmin) {
+            gamesGrid.innerHTML = '';
+            
+            games.forEach(game => {
+                const avgRating = calculateAverageRating(game.reviews || []);
+                
+                const gameCard = document.createElement('div');
+                gameCard.className = 'game-card';
+                gameCard.innerHTML = `
+                    <img src="${game.image}" class="game-image" alt="${game.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22200%22%3E%3Crect fill=%22%2300d4ff%22 width=%22280%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2220%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E${game.title}%3C/text%3E%3C/svg%3E'">
+                    <div class="game-info">
+                        <div class="game-title">${game.title}</div>
+                        <div class="game-rating">${displayStars(avgRating)} (${game.reviews?.length || 0} avis)</div>
+                        ${isAdmin ? `
+                            <div class="game-actions">
+                                <button class="btn-small btn-edit" onclick="event.stopPropagation(); editGame('${game.id}')">✏️ Modifier</button>
+                                <button class="btn-small btn-delete" onclick="event.stopPropagation(); deleteGame('${game.id}', '${game.title}')">🗑️ Supprimer</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                gameCard.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('btn-small')) {
+                        openGameModal(game.id, game);
+                    }
+                });
+                
+                gamesGrid.appendChild(gameCard);
+            });
+        }
+
+        async function loadCategories() {
+            try {
+                const categoriesSnapshot = await getDocs(collection(db, 'categories'));
+                allCategories = [];
+                
+                categoriesSnapshot.forEach((docData) => {
+                    allCategories.push({
+                        id: docData.id,
+                        ...docData.data()
+                    });
+                });
+
+                allCategories.sort((a, b) => a.name.localeCompare(b.name));
+                updateCategorySelects();
+            } catch (error) {
+                console.error('Erreur chargement catégories:', error);
+            }
+        }
+
+        function updateCategorySelects() {
+            const gameCategory = document.getElementById('gameCategory');
+            gameCategory.innerHTML = '<option value="">Sélectionner une catégorie</option>';
+            
+            allCategories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                gameCategory.appendChild(option);
+            });
+        }
+
+        async function loadGames() {
+            try {
+                const gamesSnapshot = await getDocs(query(collection(db, 'games'), orderBy('createdAt', 'desc')));
+                allGames = [];
+                
+                gamesSnapshot.forEach((docData) => {
+                    allGames.push({
+                        id: docData.id,
+                        ...docData.data()
+                    });
+                });
+
+                if (searchQuery) {
+                    filterGames();
+                } else {
+                    displayGamesByCategory();
+                }
+            } catch (error) {
+                console.error('Erreur chargement jeux:', error);
+            }
+        }
+
+        function displayGamesByCategory() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = '';
+
+            if (allCategories.length === 0) {
+                container.innerHTML = '<div class="empty-category">Aucune catégorie créée. Les admins peuvent en créer via le menu.</div>';
+                return;
+            }
+
+            allCategories.forEach(category => {
+                const categoryGames = allGames.filter(game => game.category === category.id);
+                
+                const categorySection = document.createElement('div');
+                categorySection.className = 'category-section';
+                categorySection.setAttribute('data-category-id', category.id);
+                
+                const isAdmin = currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+                
+                categorySection.innerHTML = `
+                    <div class="category-header" onclick="toggleCategory('${category.id}')">
+                        <h2>${category.name}</h2>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            ${isAdmin ? `<button class="btn-small btn-delete" onclick="event.stopPropagation(); deleteCategory('${category.id}', '${category.name}')">🗑️ Supprimer</button>` : ''}
+                            <span class="category-arrow">▼</span>
+                        </div>
+                    </div>
+                    <div class="category-games">
+                        <div class="games-grid" id="games-${category.id}"></div>
+                    </div>
+                `;
+                
+                container.appendChild(categorySection);
+                
+                const gamesGrid = document.getElementById(`games-${category.id}`);
+                
+                if (categoryGames.length === 0) {
+                    gamesGrid.innerHTML = '<div class="empty-category">Aucun jeu dans cette catégorie</div>';
+                } else {
+                    displayGamesInGrid(gamesGrid, categoryGames, isAdmin);
+                }
+            });
+        }
+
+        window.closeCategoryModal = function() {
+            document.getElementById('categoryModal').classList.remove('active');
+            document.getElementById('createCategoryForm').reset();
+        };
+
+        window.deleteCategory = async function(categoryId, categoryName) {
+            if (!currentUser || currentUser.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+                alert('Accès refusé');
+                return;
+            }
+
+            const gamesInCategory = allGames.filter(g => g.category === categoryId);
+            
+            if (gamesInCategory.length > 0) {
+                alert(`Impossible de supprimer cette catégorie car elle contient ${gamesInCategory.length} jeu(x).\n\nVeuillez d'abord déplacer ou supprimer les jeux de cette catégorie.`);
+                return;
+            }
+
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${categoryName}" ?`)) {
+                return;
+            }
+
+            try {
+                await deleteDoc(doc(db, 'categories', categoryId));
+                alert('✅ Catégorie supprimée avec succès!');
+                await loadCategories();
+                await loadGames();
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        };
+
+        document.getElementById('createCategoryBtn')?.addEventListener('click', () => {
+            document.getElementById('categoryModal').classList.add('active');
+            closeSidebar();
+        });
+
+        document.getElementById('createCategoryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!currentUser || currentUser.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+                alert('Accès refusé');
+                return;
+            }
+
+            const categoryData = {
+                name: document.getElementById('categoryName').value.trim(),
+                createdAt: new Date()
+            };
+
+            try {
+                await addDoc(collection(db, 'categories'), categoryData);
+                alert('✅ Catégorie créée avec succès!');
+                closeCategoryModal();
+                await loadCategories();
+                await loadGames();
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('loginBtn').classList.add('hidden');
+                document.getElementById('hamburger').classList.remove('hidden');
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('welcomeMessage').classList.add('hidden');
+                document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+                document.getElementById('userEmail').textContent = user.email;
+                
+                document.getElementById('sidebarUserName').textContent = user.displayName || user.email.split('@')[0];
+                document.getElementById('sidebarUserEmail').textContent = user.email;
+                
+                const isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+                const permissionBadge = document.getElementById('sidebarPermission');
+                
+                if (isAdmin) {
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                    document.getElementById('adminPanelBtn').classList.remove('hidden');
+                    document.getElementById('createCategoryBtn').classList.remove('hidden');
+                    permissionBadge.innerHTML = '<span class="permission-badge badge-admin">👑 ADMINISTRATEUR</span>';
+                } else {
+                    document.getElementById('adminPanel').classList.add('hidden');
+                    document.getElementById('adminPanelBtn').classList.add('hidden');
+                    document.getElementById('createCategoryBtn').classList.add('hidden');
+                    permissionBadge.innerHTML = '<span class="permission-badge badge-member">👤 MEMBRE</span>';
+                }
+                
+                closeAuthModal();
+            } else {
+                document.getElementById('loginBtn').classList.remove('hidden');
+                document.getElementById('hamburger').classList.add('hidden');
+                document.getElementById('userInfo').classList.add('hidden');
+                document.getElementById('welcomeMessage').classList.remove('hidden');
+                document.getElementById('adminPanel').classList.add('hidden');
+                closeSidebar();
+            }
+            
+            await loadCategories();
+            await loadGames();
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            document.getElementById('authModal').classList.add('active');
+        });
+
+        document.getElementById('emailLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                alert('Erreur de connexion: ' + error.message);
+            }
+        });
+
+        document.getElementById('registerBtn').addEventListener('click', async () => {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            if (!email || !password) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                alert('Erreur d\'inscription: ' + error.message);
+            }
+        });
+
+        document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                alert('Erreur de connexion Google: ' + error.message);
+            }
+        });
+
+        document.getElementById('hamburger').addEventListener('click', () => {
+            const hamburger = document.getElementById('hamburger');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            hamburger.classList.toggle('active');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+
+        document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+
+        function closeSidebar() {
+            document.getElementById('hamburger').classList.remove('active');
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+        }
+
+        document.getElementById('logoutBtnSidebar').addEventListener('click', () => {
+            signOut(auth);
+            closeSidebar();
+        });
+
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            document.getElementById('settingsModal').classList.add('active');
+            closeSidebar();
+        });
+
+        document.getElementById('adminPanelBtn').addEventListener('click', () => {
+            closeSidebar();
+            document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        window.closeSettingsModal = () => {
+            document.getElementById('settingsModal').classList.remove('active');
+        };
+
+        document.getElementById('updateNameBtn').addEventListener('click', async () => {
+            const newName = document.getElementById('newDisplayName').value.trim();
+            if (!newName) {
+                alert('Veuillez entrer un nouveau pseudo');
+                return;
+            }
+            try {
+                await updateProfile(currentUser, { displayName: newName });
+                alert('✅ Pseudo mis à jour avec succès!');
+                document.getElementById('newDisplayName').value = '';
+                window.location.reload();
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        });
+
+        document.getElementById('updateEmailBtn').addEventListener('click', async () => {
+            const newEmailValue = document.getElementById('newEmail').value.trim();
+            if (!newEmailValue) {
+                alert('Veuillez entrer un nouvel email');
+                return;
+            }
+            try {
+                await updateEmail(currentUser, newEmailValue);
+                alert('✅ Email mis à jour avec succès!');
+                document.getElementById('newEmail').value = '';
+            } catch (error) {
+                if (error.code === 'auth/requires-recent-login') {
+                    alert('Pour des raisons de sécurité, veuillez vous reconnecter avant de modifier votre email');
+                } else {
+                    alert('Erreur: ' + error.message);
+                }
+            }
+        });
+
+        document.getElementById('updatePasswordBtn').addEventListener('click', async () => {
+            const currentPass = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            if (!currentPass || !newPass || !confirmPass) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                alert('Les mots de passe ne correspondent pas');
+                return;
+            }
+
+            if (newPass.length < 6) {
+                alert('Le mot de passe doit contenir au moins 6 caractères');
+                return;
+            }
+
+            try {
+                const credential = EmailAuthProvider.credential(currentUser.email, currentPass);
+                await reauthenticateWithCredential(currentUser, credential);
+                await updatePassword(currentUser, newPass);
+                alert('✅ Mot de passe mis à jour avec succès!');
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } catch (error) {
+                if (error.code === 'auth/wrong-password') {
+                    alert('Le mot de passe actuel est incorrect');
+                } else {
+                    alert('Erreur: ' + error.message);
+                }
+            }
+        });
+
+        document.getElementById('addGameForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser || currentUser.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+                alert('Accès refusé');
+                return;
+            }
+            
+            const categoryId = document.getElementById('gameCategory').value;
+            if (!categoryId) {
+                alert('Veuillez sélectionner une catégorie');
+                return;
+            }
+
+            const gameData = {
+                title: document.getElementById('gameTitle').value,
+                category: categoryId,
+                image: document.getElementById('gameImage').value,
+                description: document.getElementById('gameDescription').value,
+                downloadUrl: document.getElementById('gameDownloadUrl').value,
+                reviews: [],
+                createdAt: new Date()
+            };
+
+            try {
+                await addDoc(collection(db, 'games'), gameData);
+                alert('✅ Jeu publié avec succès!');
+                document.getElementById('addGameForm').reset();
+                await loadGames();
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        });
+
+        window.deleteGame = async (gameId, gameTitle) => {
+            if (!currentUser || currentUser.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+                alert('Accès refusé');
+                return;
+            }
+
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer "${gameTitle}" ?`)) {
+                return;
+            }
+
+            try {
+                await deleteDoc(doc(db, 'games', gameId));
+                alert('✅ Jeu supprimé avec succès!');
+                await loadGames();
+            } catch (error) {
+                alert('Erreur lors de la suppression: ' + error.message);
+            }
+        };
+
+        window.editGame = async (gameId) => {
+            if (!currentUser || currentUser.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+                alert('Accès refusé');
+                return;
+            }
+
+            try {
+                const gameDoc = await getDoc(doc(db, 'games', gameId));
+                if (!gameDoc.exists()) {
+                    alert('Jeu non trouvé');
+                    return;
+                }
+
+                const game = gameDoc.data();
+                document.getElementById('gameTitle').value = game.title;
+                document.getElementById('gameCategory').value = game.category || '';
+                document.getElementById('gameImage').value = game.image;
+                document.getElementById('gameDescription').value = game.description;
+                document.getElementById('gameDownloadUrl').value = game.downloadUrl;
+
+                document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
+
+                const form = document.getElementById('addGameForm');
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.textContent = '✏️ Mettre à jour le jeu';
+                
+                const newForm = form.cloneNode(true);
+                form.parentNode.replaceChild(newForm, form);
+                
+                newForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const updatedData = {
+                        title: document.getElementById('gameTitle').value,
+                        category: document.getElementById('gameCategory').value,
+                        image: document.getElementById('gameImage').value,
+                        description: document.getElementById('gameDescription').value,
+                        downloadUrl: document.getElementById('gameDownloadUrl').value,
+                    };
+
+                    try {
+                        await updateDoc(doc(db, 'games', gameId), updatedData);
+                        alert('✅ Jeu mis à jour avec succès!');
+                        window.location.reload();
+                    } catch (error) {
+                        alert('Erreur: ' + error.message);
+                    }
+                });
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        };
+
+        function calculateAverageRating(reviews) {
+            if (!reviews || reviews.length === 0) return 0;
+            const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+            return (sum / reviews.length).toFixed(1);
+        }
+
+        function displayStars(rating) {
+            const fullStars = Math.floor(rating);
+            let stars = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
+            return stars + ` ${rating}`;
+        }
+
+        function openGameModal(gameId, game) {
+            currentGameId = gameId;
+            document.getElementById('gameModal').classList.add('active');
+            document.getElementById('modalGameImage').src = game.image;
+            document.getElementById('modalGameTitle').textContent = game.title;
+            document.getElementById('modalGameDescription').textContent = game.description;
+            document.getElementById('modalGameRating').textContent = displayStars(calculateAverageRating(game.reviews || []));
+            
+            document.getElementById('downloadBtn').onclick = () => {
+                window.open(game.downloadUrl, '_blank');
+            };
+
+            displayReviews(game.reviews || []);
+        }
+
+        window.closeGameModal = () => {
+            document.getElementById('gameModal').classList.remove('active');
+            currentGameId = null;
+            selectedRating = 0;
+            document.getElementById('reviewText').value = '';
+            updateStarDisplay();
+        };
+
+        window.closeAuthModal = () => {
+            document.getElementById('authModal').classList.remove('active');
+        };
+
+        document.querySelectorAll('#ratingStars span').forEach(star => {
+            star.addEventListener('click', (e) => {
+                selectedRating = parseInt(e.target.dataset.rating);
+                updateStarDisplay();
+            });
+        });
+
+        function updateStarDisplay() {
+            document.querySelectorAll('#ratingStars span').forEach((star, index) => {
+                star.textContent = index < selectedRating ? '★' : '☆';
+            });
+        }
+
+        document.getElementById('submitReviewBtn').addEventListener('click', async () => {
+            if (!currentUser) {
+                alert('Vous devez être connecté pour laisser un avis');
+                return;
+            }
+            if (selectedRating === 0) {
+                alert('Veuillez sélectionner une note');
+                return;
+            }
+            const reviewText = document.getElementById('reviewText').value.trim();
+            if (!reviewText) {
+                alert('Veuillez écrire un avis');
+                return;
+            }
+
+            const review = {
+                userId: currentUser.uid,
+                userName: currentUser.displayName || currentUser.email.split('@')[0],
+                rating: selectedRating,
+                text: reviewText,
+                date: new Date().toLocaleDateString()
+            };
+
+            try {
+                const gameRef = doc(db, 'games', currentGameId);
+                await updateDoc(gameRef, {
+                    reviews: arrayUnion(review)
+                });
+                alert('✅ Avis publié avec succès!');
+                selectedRating = 0;
+                document.getElementById('reviewText').value = '';
+                updateStarDisplay();
+                
+                const gameDoc = await getDoc(gameRef);
+                if (gameDoc.exists()) {
+                    const gameData = gameDoc.data();
+                    document.getElementById('modalGameRating').textContent = displayStars(calculateAverageRating(gameData.reviews || []));
+                    displayReviews(gameData.reviews || []);
+                }
+                
+                await loadGames();
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        });
+
+        function displayReviews(reviews) {
+            const reviewsList = document.getElementById('reviewsList');
+            reviewsList.innerHTML = '<h3>Avis des joueurs</h3>';
+            
+            if (reviews.length === 0) {
+                reviewsList.innerHTML += '<p style="opacity: 0.7;">Aucun avis pour le moment</p>';
+                return;
+            }
+
+            reviews.forEach((review) => {
+                const reviewItem = document.createElement('div');
+                reviewItem.className = 'review-item';
+                reviewItem.innerHTML = `
+                    <strong>${review.userName}</strong> - ${displayStars(review.rating)}
+                    <p style="margin: 0.5rem 0;">${review.text}</p>
+                    <small style="opacity: 0.7;">${review.date}</small>
+                `;
+                reviewsList.appendChild(reviewItem);
+            });
+        }
+    </script>
 </body>
 </html>
